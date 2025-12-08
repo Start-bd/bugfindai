@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import IssueCard, { Issue } from "./IssueCard";
-import { Download, FileJson, FileText, Filter, Bug, Shield, Zap, AlertTriangle, Loader2 } from "lucide-react";
+import { Download, FileJson, FileText, Filter, Bug, Shield, Zap, AlertTriangle, Loader2, Copy, Check } from "lucide-react";
 import { jsPDF } from "jspdf";
 import { useToast } from "@/hooks/use-toast";
 
@@ -27,6 +27,7 @@ const filterConfig: Record<string, { label: string; icon: typeof Filter }> = {
 const ResultsPanel = ({ issues, isLoading, summary, language = "javascript" }: ResultsPanelProps) => {
   const [filter, setFilter] = useState<FilterType>("all");
   const [exporting, setExporting] = useState<"json" | "pdf" | null>(null);
+  const [copiedAll, setCopiedAll] = useState(false);
   const { toast } = useToast();
 
   const filteredIssues = filter === "all" 
@@ -38,6 +39,35 @@ const ResultsPanel = ({ issues, isLoading, summary, language = "javascript" }: R
     high: issues.filter(i => i.severity === "high").length,
     medium: issues.filter(i => i.severity === "medium").length,
     low: issues.filter(i => i.severity === "low").length,
+  };
+
+  const issuesWithFixes = issues.filter(i => i.fixedCode);
+
+  const copyAllFixes = async () => {
+    if (issuesWithFixes.length === 0) return;
+    
+    const allFixes = issuesWithFixes
+      .map((issue, index) => {
+        const header = `// Fix ${index + 1}: ${issue.title}${issue.line ? ` (Line ${issue.line})` : ""}`;
+        return `${header}\n${issue.fixedCode}`;
+      })
+      .join("\n\n");
+    
+    try {
+      await navigator.clipboard.writeText(allFixes);
+      setCopiedAll(true);
+      setTimeout(() => setCopiedAll(false), 2000);
+      toast({
+        title: "Copied!",
+        description: `${issuesWithFixes.length} fix${issuesWithFixes.length > 1 ? "es" : ""} copied to clipboard.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Copy failed",
+        description: "Could not copy to clipboard.",
+        variant: "destructive",
+      });
+    }
   };
 
   const downloadJSON = () => {
@@ -271,7 +301,27 @@ const ResultsPanel = ({ issues, isLoading, summary, language = "javascript" }: R
             </span>
           </h2>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            {issuesWithFixes.length > 0 && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={copyAllFixes}
+                className="gap-1.5"
+              >
+                {copiedAll ? (
+                  <>
+                    <Check className="w-4 h-4 text-success" />
+                    Copied!
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4" />
+                    Copy All Fixes
+                  </>
+                )}
+              </Button>
+            )}
             <Button 
               variant="outline" 
               size="sm" 
