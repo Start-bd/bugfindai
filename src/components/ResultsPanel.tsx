@@ -1,31 +1,37 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import IssueCard, { Issue } from "./IssueCard";
-import { Download, FileJson, FileText, Filter, Bug, Shield, Zap, AlertTriangle } from "lucide-react";
+import { Download, FileJson, FileText, Filter, Bug, Shield, Zap, AlertTriangle, Loader2 } from "lucide-react";
+import { jsPDF } from "jspdf";
+import { useToast } from "@/hooks/use-toast";
 
 interface ResultsPanelProps {
   issues: Issue[];
   isLoading: boolean;
   summary?: string;
+  language?: string;
 }
 
-type FilterType = "all" | "bug" | "vulnerability" | "performance" | "logic" | "bestPractice";
+type FilterType = "all" | "bug" | "vulnerability" | "performance" | "logic" | "bestPractice" | "best-practice";
 
-const filterConfig = {
+const filterConfig: Record<string, { label: string; icon: typeof Filter }> = {
   all: { label: "All", icon: Filter },
   bug: { label: "Bugs", icon: Bug },
   vulnerability: { label: "Security", icon: Shield },
   performance: { label: "Performance", icon: Zap },
   logic: { label: "Logic", icon: AlertTriangle },
   bestPractice: { label: "Best Practices", icon: FileText },
+  "best-practice": { label: "Best Practices", icon: FileText },
 };
 
-const ResultsPanel = ({ issues, isLoading, summary }: ResultsPanelProps) => {
+const ResultsPanel = ({ issues, isLoading, summary, language = "javascript" }: ResultsPanelProps) => {
   const [filter, setFilter] = useState<FilterType>("all");
+  const [exporting, setExporting] = useState<"json" | "pdf" | null>(null);
+  const { toast } = useToast();
 
   const filteredIssues = filter === "all" 
     ? issues 
-    : issues.filter(issue => issue.type === filter);
+    : issues.filter(issue => issue.type === filter || (filter === "bestPractice" && issue.type === "best-practice"));
 
   const issueStats = {
     critical: issues.filter(i => i.severity === "critical").length,
@@ -34,13 +40,19 @@ const ResultsPanel = ({ issues, isLoading, summary }: ResultsPanelProps) => {
     low: issues.filter(i => i.severity === "low").length,
   };
 
-  const downloadReport = (format: "json" | "pdf") => {
-    if (format === "json") {
+  const downloadJSON = () => {
+    setExporting("json");
+    try {
       const report = {
         timestamp: new Date().toISOString(),
         summary,
         statistics: issueStats,
-        issues,
+        totalIssues: issues.length,
+        issues: issues.map(issue => ({
+          ...issue,
+          type: issue.type,
+          severity: issue.severity,
+        })),
       };
       const blob = new Blob([JSON.stringify(report, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
@@ -49,6 +61,168 @@ const ResultsPanel = ({ issues, isLoading, summary }: ResultsPanelProps) => {
       a.download = `bugfind-report-${Date.now()}.json`;
       a.click();
       URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Export successful",
+        description: "JSON report downloaded successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Export failed",
+        description: "Failed to export JSON report.",
+        variant: "destructive",
+      });
+    } finally {
+      setExporting(null);
+    }
+  };
+
+  const downloadPDF = () => {
+    setExporting("pdf");
+    try {
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const margin = 20;
+      const contentWidth = pageWidth - margin * 2;
+      let yPos = 20;
+
+      // Title
+      doc.setFontSize(24);
+      doc.setTextColor(45, 255, 113); // Primary green
+      doc.text("BugFindAI Report", margin, yPos);
+      yPos += 15;
+
+      // Timestamp
+      doc.setFontSize(10);
+      doc.setTextColor(128, 128, 128);
+      doc.text(`Generated: ${new Date().toLocaleString()}`, margin, yPos);
+      yPos += 15;
+
+      // Summary
+      if (summary) {
+        doc.setFontSize(12);
+        doc.setTextColor(0, 0, 0);
+        doc.text("Summary", margin, yPos);
+        yPos += 7;
+        doc.setFontSize(10);
+        doc.setTextColor(80, 80, 80);
+        const summaryLines = doc.splitTextToSize(summary, contentWidth);
+        doc.text(summaryLines, margin, yPos);
+        yPos += summaryLines.length * 5 + 10;
+      }
+
+      // Statistics
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      doc.text("Statistics", margin, yPos);
+      yPos += 7;
+      doc.setFontSize(10);
+      doc.setTextColor(80, 80, 80);
+      doc.text(`Total Issues: ${issues.length}`, margin, yPos);
+      yPos += 5;
+      if (issueStats.critical > 0) {
+        doc.setTextColor(239, 68, 68);
+        doc.text(`Critical: ${issueStats.critical}`, margin, yPos);
+        yPos += 5;
+      }
+      if (issueStats.high > 0) {
+        doc.setTextColor(249, 115, 22);
+        doc.text(`High: ${issueStats.high}`, margin, yPos);
+        yPos += 5;
+      }
+      if (issueStats.medium > 0) {
+        doc.setTextColor(234, 179, 8);
+        doc.text(`Medium: ${issueStats.medium}`, margin, yPos);
+        yPos += 5;
+      }
+      if (issueStats.low > 0) {
+        doc.setTextColor(59, 130, 246);
+        doc.text(`Low: ${issueStats.low}`, margin, yPos);
+        yPos += 5;
+      }
+      yPos += 10;
+
+      // Issues
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      doc.text("Issues", margin, yPos);
+      yPos += 10;
+
+      issues.forEach((issue, index) => {
+        // Check if we need a new page
+        if (yPos > 250) {
+          doc.addPage();
+          yPos = 20;
+        }
+
+        // Severity color
+        const severityColors: Record<string, [number, number, number]> = {
+          critical: [239, 68, 68],
+          high: [249, 115, 22],
+          medium: [234, 179, 8],
+          low: [59, 130, 246],
+        };
+
+        // Issue header
+        doc.setFontSize(11);
+        doc.setTextColor(...(severityColors[issue.severity] || [0, 0, 0]));
+        doc.text(`${index + 1}. [${issue.severity.toUpperCase()}] ${issue.title}`, margin, yPos);
+        yPos += 6;
+
+        // Type and line
+        doc.setFontSize(9);
+        doc.setTextColor(128, 128, 128);
+        const meta = `Type: ${issue.type}${issue.line ? ` | Line: ${issue.line}` : ""}`;
+        doc.text(meta, margin, yPos);
+        yPos += 5;
+
+        // Description
+        doc.setFontSize(9);
+        doc.setTextColor(60, 60, 60);
+        const descLines = doc.splitTextToSize(issue.description, contentWidth);
+        doc.text(descLines, margin, yPos);
+        yPos += descLines.length * 4 + 3;
+
+        // Fix suggestion
+        doc.setFontSize(9);
+        doc.setTextColor(45, 255, 113);
+        doc.text("Fix:", margin, yPos);
+        doc.setTextColor(60, 60, 60);
+        const fixLines = doc.splitTextToSize(issue.fix, contentWidth - 10);
+        yPos += 4;
+        doc.text(fixLines, margin + 5, yPos);
+        yPos += fixLines.length * 4 + 8;
+      });
+
+      // Footer
+      const pageCount = doc.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(128, 128, 128);
+        doc.text(
+          `Page ${i} of ${pageCount} | BugFindAI - AI-Powered Code Analysis`,
+          pageWidth / 2,
+          doc.internal.pageSize.getHeight() - 10,
+          { align: "center" }
+        );
+      }
+
+      doc.save(`bugfind-report-${Date.now()}.pdf`);
+      
+      toast({
+        title: "Export successful",
+        description: "PDF report downloaded successfully.",
+      });
+    } catch (error) {
+      console.error("PDF export error:", error);
+      toast({
+        title: "Export failed",
+        description: "Failed to export PDF report.",
+        variant: "destructive",
+      });
+    } finally {
+      setExporting(null);
     }
   };
 
@@ -82,6 +256,9 @@ const ResultsPanel = ({ issues, isLoading, summary }: ResultsPanelProps) => {
     );
   }
 
+  // Get unique filter types that exist in issues
+  const availableFilters = ["all", ...new Set(issues.map(i => i.type))];
+
   return (
     <div className="h-full flex flex-col">
       {/* Header with stats */}
@@ -95,19 +272,37 @@ const ResultsPanel = ({ issues, isLoading, summary }: ResultsPanelProps) => {
           </h2>
           
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => downloadReport("json")}>
-              <FileJson className="w-4 h-4 mr-2" />
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={downloadJSON}
+              disabled={exporting !== null}
+            >
+              {exporting === "json" ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <FileJson className="w-4 h-4 mr-2" />
+              )}
               JSON
             </Button>
-            <Button variant="outline" size="sm" onClick={() => downloadReport("pdf")}>
-              <Download className="w-4 h-4 mr-2" />
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={downloadPDF}
+              disabled={exporting !== null}
+            >
+              {exporting === "pdf" ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Download className="w-4 h-4 mr-2" />
+              )}
               PDF
             </Button>
           </div>
         </div>
 
         {/* Severity stats */}
-        <div className="flex gap-3 mb-4">
+        <div className="flex gap-3 mb-4 flex-wrap">
           {issueStats.critical > 0 && (
             <div className="flex items-center gap-1.5 text-xs px-2 py-1 rounded-md bg-critical/10 text-critical">
               <span className="w-2 h-2 rounded-full bg-critical" />
@@ -136,18 +331,17 @@ const ResultsPanel = ({ issues, isLoading, summary }: ResultsPanelProps) => {
 
         {/* Filter buttons */}
         <div className="flex gap-2 flex-wrap">
-          {(Object.keys(filterConfig) as FilterType[]).map((key) => {
-            const config = filterConfig[key];
+          {availableFilters.map((key) => {
+            const config = filterConfig[key] || { label: key, icon: Filter };
             const Icon = config.icon;
             const count = key === "all" ? issues.length : issues.filter(i => i.type === key).length;
-            if (key !== "all" && count === 0) return null;
             
             return (
               <Button
                 key={key}
                 variant={filter === key ? "default" : "outline"}
                 size="sm"
-                onClick={() => setFilter(key)}
+                onClick={() => setFilter(key as FilterType)}
                 className="gap-1.5"
               >
                 <Icon className="w-3.5 h-3.5" />
@@ -170,7 +364,7 @@ const ResultsPanel = ({ issues, isLoading, summary }: ResultsPanelProps) => {
       {/* Issues list */}
       <div className="flex-1 overflow-y-auto space-y-3 pr-2">
         {filteredIssues.map((issue, index) => (
-          <IssueCard key={issue.id} issue={issue} index={index} />
+          <IssueCard key={issue.id} issue={issue} index={index} language={language} />
         ))}
       </div>
     </div>

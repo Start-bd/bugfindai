@@ -2,10 +2,11 @@ import { useState } from "react";
 import { ChevronDown, ChevronUp, AlertTriangle, AlertCircle, Info, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import CodeBlock from "./CodeBlock";
 
 export interface Issue {
   id: string;
-  type: "bug" | "vulnerability" | "performance" | "logic" | "bestPractice";
+  type: "bug" | "vulnerability" | "performance" | "logic" | "bestPractice" | "best-practice";
   severity: "critical" | "high" | "medium" | "low";
   title: string;
   description: string;
@@ -18,6 +19,7 @@ export interface Issue {
 interface IssueCardProps {
   issue: Issue;
   index: number;
+  language?: string;
 }
 
 const severityConfig = {
@@ -47,15 +49,16 @@ const severityConfig = {
   },
 };
 
-const typeLabels = {
+const typeLabels: Record<string, string> = {
   bug: "Bug",
   vulnerability: "Vulnerability",
   performance: "Performance",
   logic: "Logic Issue",
   bestPractice: "Best Practice",
+  "best-practice": "Best Practice",
 };
 
-const IssueCard = ({ issue, index }: IssueCardProps) => {
+const IssueCard = ({ issue, index, language = "javascript" }: IssueCardProps) => {
   const [expanded, setExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
   
@@ -93,7 +96,7 @@ const IssueCard = ({ issue, index }: IssueCardProps) => {
               {issue.severity.toUpperCase()}
             </span>
             <span className="text-xs text-muted-foreground px-2 py-0.5 rounded-full bg-secondary">
-              {typeLabels[issue.type]}
+              {typeLabels[issue.type] || issue.type}
             </span>
             {issue.line && (
               <span className="text-xs text-muted-foreground">
@@ -139,9 +142,7 @@ const IssueCard = ({ issue, index }: IssueCardProps) => {
                   )}
                 </Button>
               </div>
-              <pre className="bg-input rounded-lg p-4 overflow-x-auto text-sm font-mono text-success">
-                {issue.fixedCode}
-              </pre>
+              <CodeBlock code={issue.fixedCode} language={language} />
             </div>
           )}
         </div>
