@@ -12,7 +12,7 @@ const Scan = () => {
   const [issues, setIssues] = useState<Issue[]>([]);
   const [summary, setSummary] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
-  const [lastCode, setLastCode] = useState<string>("");
+  const [currentLanguage, setCurrentLanguage] = useState<string>("javascript");
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -50,9 +50,9 @@ const Scan = () => {
     setIsLoading(true);
     setIssues([]);
     setSummary("");
-    setLastCode(code);
 
     const language = detectLanguage(code, filename);
+    setCurrentLanguage(language);
 
     try {
       const { data, error } = await supabase.functions.invoke('analyze-code', {
@@ -147,7 +147,7 @@ const Scan = () => {
 
             {/* Right: Results Panel */}
             <div className="glass rounded-2xl p-6 border-primary/10">
-              <ResultsPanel issues={issues} isLoading={isLoading} summary={summary} />
+              <ResultsPanel issues={issues} isLoading={isLoading} summary={summary} language={currentLanguage} />
             </div>
           </div>
         </div>
