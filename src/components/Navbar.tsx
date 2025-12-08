@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Bug, Zap, LogOut, User, History } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,12 +33,14 @@ const Navbar = () => {
           </span>
         </Link>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
           <Link to="/scan">
             <Button variant="ghost" size="sm">
               Scanner
             </Button>
           </Link>
+          
+          <ThemeToggle />
           
           {user ? (
             <DropdownMenu>
