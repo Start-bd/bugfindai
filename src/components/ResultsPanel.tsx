@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import IssueCard, { Issue } from "./IssueCard";
-import { Download, FileJson, FileText, Filter, Bug, Shield, Zap, AlertTriangle, Loader2, Copy, Check } from "lucide-react";
+import { Download, FileJson, FileText, Filter, Bug, Shield, Zap, AlertTriangle, Loader2, Copy, Check, FileCode, X } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { jsPDF } from "jspdf";
 import { useToast } from "@/hooks/use-toast";
 
@@ -26,13 +27,36 @@ const filterConfig: Record<string, { label: string; icon: typeof Filter }> = {
 
 const ResultsPanel = ({ issues, isLoading, summary, language = "javascript" }: ResultsPanelProps) => {
   const [filter, setFilter] = useState<FilterType>("all");
+  const [fileFilter, setFileFilter] = useState<string | null>(null);
   const [exporting, setExporting] = useState<"json" | "pdf" | null>(null);
   const [copiedAll, setCopiedAll] = useState(false);
   const { toast } = useToast();
 
-  const filteredIssues = filter === "all" 
-    ? issues 
-    : issues.filter(issue => issue.type === filter || (filter === "bestPractice" && issue.type === "best-practice"));
+  // Get unique files from issues
+  const uniqueFiles = useMemo(() => {
+    const files = issues
+      .map(i => i.file)
+      .filter((file): file is string => !!file);
+    return [...new Set(files)];
+  }, [issues]);
+
+  const filteredIssues = useMemo(() => {
+    let result = issues;
+    
+    // Apply file filter first
+    if (fileFilter) {
+      result = result.filter(issue => issue.file === fileFilter);
+    }
+    
+    // Then apply type filter
+    if (filter !== "all") {
+      result = result.filter(issue => 
+        issue.type === filter || (filter === "bestPractice" && issue.type === "best-practice")
+      );
+    }
+    
+    return result;
+  }, [issues, filter, fileFilter]);
 
   const issueStats = {
     critical: issues.filter(i => i.severity === "critical").length,
@@ -384,7 +408,11 @@ const ResultsPanel = ({ issues, isLoading, summary, language = "javascript" }: R
           {availableFilters.map((key) => {
             const config = filterConfig[key] || { label: key, icon: Filter };
             const Icon = config.icon;
-            const count = key === "all" ? issues.length : issues.filter(i => i.type === key).length;
+            const count = key === "all" 
+              ? (fileFilter ? issues.filter(i => i.file === fileFilter).length : issues.length)
+              : issues.filter(i => 
+                  (i.type === key) && (!fileFilter || i.file === fileFilter)
+                ).length;
             
             return (
               <Button
@@ -401,6 +429,50 @@ const ResultsPanel = ({ issues, isLoading, summary, language = "javascript" }: R
             );
           })}
         </div>
+
+        {/* File filter - only show when there are multiple files */}
+        {uniqueFiles.length > 1 && (
+          <div className="mt-4">
+            <div className="flex items-center gap-2 mb-2">
+              <FileCode className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm font-medium text-muted-foreground">Filter by File</span>
+              {fileFilter && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setFileFilter(null)}
+                  className="h-6 px-2 text-xs gap-1"
+                >
+                  <X className="w-3 h-3" />
+                  Clear
+                </Button>
+              )}
+            </div>
+            <ScrollArea className="w-full">
+              <div className="flex gap-2 pb-2">
+                {uniqueFiles.map((file) => {
+                  const fileIssueCount = issues.filter(i => i.file === file).length;
+                  const fileName = file.split('/').pop() || file;
+                  
+                  return (
+                    <Button
+                      key={file}
+                      variant={fileFilter === file ? "default" : "secondary"}
+                      size="sm"
+                      onClick={() => setFileFilter(fileFilter === file ? null : file)}
+                      className="gap-1.5 shrink-0"
+                      title={file}
+                    >
+                      <FileCode className="w-3.5 h-3.5" />
+                      {fileName}
+                      <span className="text-xs opacity-70">({fileIssueCount})</span>
+                    </Button>
+                  );
+                })}
+              </div>
+            </ScrollArea>
+          </div>
+        )}
       </div>
 
       {/* Summary */}
