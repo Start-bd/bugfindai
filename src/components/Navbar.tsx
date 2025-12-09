@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Bug, Zap, LogOut, User, History } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import SyntaxThemeSelector from "@/components/SyntaxThemeSelector";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,6 +41,7 @@ const Navbar = () => {
             </Button>
           </Link>
           
+          <SyntaxThemeSelector />
           <ThemeToggle />
           
           {user ? (

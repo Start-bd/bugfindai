@@ -1,5 +1,5 @@
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { useSyntaxStyle } from "@/hooks/useSyntaxStyle";
 
 interface CodeBlockProps {
   code: string;
@@ -8,6 +8,8 @@ interface CodeBlockProps {
 }
 
 const CodeBlock = ({ code, language = "javascript", className = "" }: CodeBlockProps) => {
+  const syntaxStyle = useSyntaxStyle();
+  
   // Map common language names to Prism language identifiers
   const languageMap: Record<string, string> = {
     js: "javascript",
@@ -37,7 +39,7 @@ const CodeBlock = ({ code, language = "javascript", className = "" }: CodeBlockP
     <div className={`rounded-lg overflow-hidden ${className}`}>
       <SyntaxHighlighter
         language={mappedLanguage}
-        style={oneDark}
+        style={syntaxStyle}
         customStyle={{
           margin: 0,
           padding: "1rem",
