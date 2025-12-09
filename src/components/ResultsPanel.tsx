@@ -1,10 +1,16 @@
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import IssueCard, { Issue } from "./IssueCard";
-import { Download, FileJson, FileText, Filter, Bug, Shield, Zap, AlertTriangle, Loader2, Copy, Check, FileCode, X } from "lucide-react";
+import { Download, FileJson, FileText, Filter, Bug, Shield, Zap, AlertTriangle, Loader2, Copy, Check, FileCode, X, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { jsPDF } from "jspdf";
 import { useToast } from "@/hooks/use-toast";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface ResultsPanelProps {
   issues: Issue[];
@@ -14,6 +20,8 @@ interface ResultsPanelProps {
 }
 
 type FilterType = "all" | "bug" | "vulnerability" | "performance" | "logic" | "bestPractice" | "best-practice";
+type SortField = "severity" | "type" | "file";
+type SortDirection = "asc" | "desc";
 
 const filterConfig: Record<string, { label: string; icon: typeof Filter }> = {
   all: { label: "All", icon: Filter },
@@ -25,9 +33,18 @@ const filterConfig: Record<string, { label: string; icon: typeof Filter }> = {
   "best-practice": { label: "Best Practices", icon: FileText },
 };
 
+const severityOrder: Record<string, number> = {
+  critical: 0,
+  high: 1,
+  medium: 2,
+  low: 3,
+};
+
 const ResultsPanel = ({ issues, isLoading, summary, language = "javascript" }: ResultsPanelProps) => {
   const [filter, setFilter] = useState<FilterType>("all");
   const [fileFilter, setFileFilter] = useState<string | null>(null);
+  const [sortField, setSortField] = useState<SortField>("severity");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [exporting, setExporting] = useState<"json" | "pdf" | null>(null);
   const [copiedAll, setCopiedAll] = useState(false);
   const { toast } = useToast();
@@ -40,8 +57,8 @@ const ResultsPanel = ({ issues, isLoading, summary, language = "javascript" }: R
     return [...new Set(files)];
   }, [issues]);
 
-  const filteredIssues = useMemo(() => {
-    let result = issues;
+  const filteredAndSortedIssues = useMemo(() => {
+    let result = [...issues];
     
     // Apply file filter first
     if (fileFilter) {
@@ -55,8 +72,45 @@ const ResultsPanel = ({ issues, isLoading, summary, language = "javascript" }: R
       );
     }
     
+    // Apply sorting
+    result.sort((a, b) => {
+      let comparison = 0;
+      
+      switch (sortField) {
+        case "severity":
+          comparison = (severityOrder[a.severity] ?? 99) - (severityOrder[b.severity] ?? 99);
+          break;
+        case "type":
+          comparison = (a.type || "").localeCompare(b.type || "");
+          break;
+        case "file":
+          comparison = (a.file || "").localeCompare(b.file || "");
+          break;
+      }
+      
+      return sortDirection === "asc" ? comparison : -comparison;
+    });
+    
     return result;
-  }, [issues, filter, fileFilter]);
+  }, [issues, filter, fileFilter, sortField, sortDirection]);
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(prev => prev === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("asc");
+    }
+  };
+
+  const getSortLabel = () => {
+    const labels: Record<SortField, string> = {
+      severity: "Severity",
+      type: "Type",
+      file: "File",
+    };
+    return labels[sortField];
+  };
 
   const issueStats = {
     critical: issues.filter(i => i.severity === "critical").length,
@@ -403,31 +457,72 @@ const ResultsPanel = ({ issues, isLoading, summary, language = "javascript" }: R
           )}
         </div>
 
-        {/* Filter buttons */}
-        <div className="flex gap-2 flex-wrap">
-          {availableFilters.map((key) => {
-            const config = filterConfig[key] || { label: key, icon: Filter };
-            const Icon = config.icon;
-            const count = key === "all" 
-              ? (fileFilter ? issues.filter(i => i.file === fileFilter).length : issues.length)
-              : issues.filter(i => 
-                  (i.type === key) && (!fileFilter || i.file === fileFilter)
-                ).length;
-            
-            return (
-              <Button
-                key={key}
-                variant={filter === key ? "default" : "outline"}
-                size="sm"
-                onClick={() => setFilter(key as FilterType)}
-                className="gap-1.5"
-              >
-                <Icon className="w-3.5 h-3.5" />
-                {config.label}
-                <span className="text-xs opacity-70">({count})</span>
+        {/* Filter and Sort controls */}
+        <div className="flex items-center gap-4 flex-wrap">
+          {/* Filter buttons */}
+          <div className="flex gap-2 flex-wrap">
+            {availableFilters.map((key) => {
+              const config = filterConfig[key] || { label: key, icon: Filter };
+              const Icon = config.icon;
+              const count = key === "all" 
+                ? (fileFilter ? issues.filter(i => i.file === fileFilter).length : issues.length)
+                : issues.filter(i => 
+                    (i.type === key) && (!fileFilter || i.file === fileFilter)
+                  ).length;
+              
+              return (
+                <Button
+                  key={key}
+                  variant={filter === key ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setFilter(key as FilterType)}
+                  className="gap-1.5"
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  {config.label}
+                  <span className="text-xs opacity-70">({count})</span>
+                </Button>
+              );
+            })}
+          </div>
+
+          {/* Sort dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-1.5">
+                <ArrowUpDown className="w-3.5 h-3.5" />
+                Sort: {getSortLabel()}
+                {sortDirection === "asc" ? (
+                  <ArrowUp className="w-3 h-3 opacity-70" />
+                ) : (
+                  <ArrowDown className="w-3 h-3 opacity-70" />
+                )}
               </Button>
-            );
-          })}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="bg-popover">
+              <DropdownMenuItem onClick={() => handleSort("severity")} className="gap-2">
+                <AlertTriangle className="w-4 h-4" />
+                Severity
+                {sortField === "severity" && (
+                  sortDirection === "asc" ? <ArrowUp className="w-3 h-3 ml-auto" /> : <ArrowDown className="w-3 h-3 ml-auto" />
+                )}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleSort("type")} className="gap-2">
+                <Filter className="w-4 h-4" />
+                Type
+                {sortField === "type" && (
+                  sortDirection === "asc" ? <ArrowUp className="w-3 h-3 ml-auto" /> : <ArrowDown className="w-3 h-3 ml-auto" />
+                )}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleSort("file")} className="gap-2">
+                <FileCode className="w-4 h-4" />
+                File Name
+                {sortField === "file" && (
+                  sortDirection === "asc" ? <ArrowUp className="w-3 h-3 ml-auto" /> : <ArrowDown className="w-3 h-3 ml-auto" />
+                )}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {/* File filter - only show when there are multiple files */}
@@ -485,7 +580,7 @@ const ResultsPanel = ({ issues, isLoading, summary, language = "javascript" }: R
 
       {/* Issues list */}
       <div className="flex-1 overflow-y-auto space-y-3 pr-2">
-        {filteredIssues.map((issue, index) => (
+        {filteredAndSortedIssues.map((issue, index) => (
           <IssueCard key={issue.id} issue={issue} index={index} language={language} />
         ))}
       </div>
