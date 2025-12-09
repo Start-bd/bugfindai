@@ -2,10 +2,10 @@ import { useState, useRef, useEffect, useImperativeHandle, forwardRef } from "re
 import { Button } from "@/components/ui/button";
 import { Upload, Code, Loader2, X, FileCode, Github, Link, AlertCircle } from "lucide-react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import KeyboardShortcuts from "./KeyboardShortcuts";
+import { useSyntaxStyle } from "@/hooks/useSyntaxStyle";
 
 interface CodeInputProps {
   onSubmit: (code: string, filename?: string) => void;
@@ -21,6 +21,7 @@ export interface CodeInputRef {
 const SUPPORTED_EXTENSIONS = [".js", ".ts", ".jsx", ".tsx", ".py", ".java", ".php", ".go", ".cpp", ".c", ".rb", ".rs"];
 
 const CodeInput = forwardRef<CodeInputRef, CodeInputProps>(({ onSubmit, isLoading }, ref) => {
+  const syntaxStyle = useSyntaxStyle();
   const [code, setCode] = useState("");
   const [uploadedFile, setUploadedFile] = useState<{ name: string; content: string } | null>(null);
   const [language, setLanguage] = useState("javascript");
@@ -263,7 +264,7 @@ const CodeInput = forwardRef<CodeInputRef, CodeInputProps>(({ onSubmit, isLoadin
               <div className="h-full overflow-auto rounded-lg border border-border">
                 <SyntaxHighlighter
                   language={language}
-                  style={oneDark}
+                  style={syntaxStyle}
                   customStyle={{
                     margin: 0,
                     padding: "1rem",

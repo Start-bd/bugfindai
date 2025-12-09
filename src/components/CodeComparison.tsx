@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Copy, Check, ArrowLeftRight } from "lucide-react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { useSyntaxStyle } from "@/hooks/useSyntaxStyle";
 
 interface CodeComparisonProps {
   originalCode: string;
@@ -12,6 +12,7 @@ interface CodeComparisonProps {
 }
 
 const CodeComparison = ({ originalCode, fixedCode, language = "javascript", title }: CodeComparisonProps) => {
+  const syntaxStyle = useSyntaxStyle();
   const [copiedOriginal, setCopiedOriginal] = useState(false);
   const [copiedFixed, setCopiedFixed] = useState(false);
 
@@ -72,7 +73,7 @@ const CodeComparison = ({ originalCode, fixedCode, language = "javascript", titl
           <div className="overflow-auto rounded-lg border border-destructive/20 max-h-[300px]">
             <SyntaxHighlighter
               language={language}
-              style={oneDark}
+              style={syntaxStyle}
               customStyle={codeStyle}
               showLineNumbers
               lineNumberStyle={{
@@ -115,7 +116,7 @@ const CodeComparison = ({ originalCode, fixedCode, language = "javascript", titl
           <div className="overflow-auto rounded-lg border border-success/20 max-h-[300px]">
             <SyntaxHighlighter
               language={language}
-              style={oneDark}
+              style={syntaxStyle}
               customStyle={codeStyle}
               showLineNumbers
               lineNumberStyle={{
