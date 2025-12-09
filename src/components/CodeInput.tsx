@@ -1,19 +1,26 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useImperativeHandle, forwardRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Upload, Code, Loader2, X, FileCode, Github, Link, AlertCircle } from "lucide-react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import KeyboardShortcuts from "./KeyboardShortcuts";
 
 interface CodeInputProps {
   onSubmit: (code: string, filename?: string) => void;
   isLoading: boolean;
 }
 
+export interface CodeInputRef {
+  clear: () => void;
+  submit: () => void;
+  hasCode: () => boolean;
+}
+
 const SUPPORTED_EXTENSIONS = [".js", ".ts", ".jsx", ".tsx", ".py", ".java", ".php", ".go", ".cpp", ".c", ".rb", ".rs"];
 
-const CodeInput = ({ onSubmit, isLoading }: CodeInputProps) => {
+const CodeInput = forwardRef<CodeInputRef, CodeInputProps>(({ onSubmit, isLoading }, ref) => {
   const [code, setCode] = useState("");
   const [uploadedFile, setUploadedFile] = useState<{ name: string; content: string } | null>(null);
   const [language, setLanguage] = useState("javascript");
@@ -24,6 +31,13 @@ const CodeInput = ({ onSubmit, isLoading }: CodeInputProps) => {
   const [githubUrl, setGithubUrl] = useState("");
   const [githubError, setGithubError] = useState("");
   const [isFetchingGithub, setIsFetchingGithub] = useState(false);
+
+  // Expose methods to parent
+  useImperativeHandle(ref, () => ({
+    clear: clearFile,
+    submit: handleSubmit,
+    hasCode: () => code.trim().length > 0,
+  }));
 
   const detectLanguage = (filename?: string, content?: string): string => {
     if (filename) {
@@ -344,27 +358,38 @@ function example() {
         </TabsContent>
       </Tabs>
 
-      <Button
-        onClick={handleSubmit}
-        disabled={!code.trim() || isLoading}
-        variant="hero"
-        size="lg"
-        className="mt-4 w-full"
-      >
-        {isLoading ? (
-          <>
-            <Loader2 className="w-5 h-5 animate-spin" />
-            Analyzing Code...
-          </>
-        ) : (
-          <>
-            <Code className="w-5 h-5" />
-            Scan for Bugs
-          </>
-        )}
-      </Button>
+      <div className="mt-4 flex items-center gap-4">
+        <Button
+          onClick={handleSubmit}
+          disabled={!code.trim() || isLoading}
+          variant="hero"
+          size="lg"
+          className="flex-1"
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              Analyzing Code...
+            </>
+          ) : (
+            <>
+              <Code className="w-5 h-5" />
+              Scan for Bugs
+            </>
+          )}
+        </Button>
+        
+        <KeyboardShortcuts
+          onScan={handleSubmit}
+          onClear={clearFile}
+          canScan={code.trim().length > 0 && !isLoading}
+          canClear={code.trim().length > 0 || !!uploadedFile || !!githubUrl}
+        />
+      </div>
     </div>
   );
-};
+});
+
+CodeInput.displayName = "CodeInput";
 
 export default CodeInput;
