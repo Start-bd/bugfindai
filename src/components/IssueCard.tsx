@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { ChevronDown, ChevronUp, AlertTriangle, AlertCircle, Info, Copy, Check } from "lucide-react";
+import { ChevronDown, ChevronUp, AlertTriangle, AlertCircle, Info, Copy, Check, ArrowLeftRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import CodeBlock from "./CodeBlock";
+import CodeComparison from "./CodeComparison";
 
 export interface Issue {
   id: string;
@@ -14,6 +15,7 @@ export interface Issue {
   file?: string;
   fix: string;
   fixedCode?: string;
+  originalCode?: string;
 }
 
 interface IssueCardProps {
@@ -61,9 +63,12 @@ const typeLabels: Record<string, string> = {
 const IssueCard = ({ issue, index, language = "javascript" }: IssueCardProps) => {
   const [expanded, setExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showComparison, setShowComparison] = useState(false);
   
   const config = severityConfig[issue.severity];
   const Icon = config.icon;
+  
+  const hasComparison = issue.originalCode && issue.fixedCode;
 
   const copyFix = async () => {
     if (issue.fixedCode) {
@@ -128,21 +133,43 @@ const IssueCard = ({ issue, index, language = "javascript" }: IssueCardProps) =>
             <div>
               <div className="flex items-center justify-between mb-2">
                 <h4 className="text-sm font-medium text-muted-foreground">Fixed Code</h4>
-                <Button variant="ghost" size="sm" onClick={copyFix}>
-                  {copied ? (
-                    <>
-                      <Check className="w-4 h-4 text-success" />
-                      Copied
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-4 h-4" />
-                      Copy
-                    </>
+                <div className="flex items-center gap-2">
+                  {hasComparison && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowComparison(!showComparison)}
+                      className="text-xs"
+                    >
+                      <ArrowLeftRight className="w-4 h-4 mr-1" />
+                      {showComparison ? "Hide Comparison" : "Compare"}
+                    </Button>
                   )}
-                </Button>
+                  <Button variant="ghost" size="sm" onClick={copyFix}>
+                    {copied ? (
+                      <>
+                        <Check className="w-4 h-4 text-success" />
+                        Copied
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-4 h-4" />
+                        Copy
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
-              <CodeBlock code={issue.fixedCode} language={language} />
+              
+              {showComparison && hasComparison ? (
+                <CodeComparison
+                  originalCode={issue.originalCode!}
+                  fixedCode={issue.fixedCode}
+                  language={language}
+                />
+              ) : (
+                <CodeBlock code={issue.fixedCode} language={language} />
+              )}
             </div>
           )}
         </div>
