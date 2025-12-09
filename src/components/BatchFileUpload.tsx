@@ -32,6 +32,7 @@ const BatchFileUpload = ({ onComplete, isLoading, setIsLoading }: BatchFileUploa
   const [files, setFiles] = useState<FileResult[]>([]);
   const [expandedFiles, setExpandedFiles] = useState<Set<string>>(new Set());
   const [progress, setProgress] = useState(0);
+  const [isDragOver, setIsDragOver] = useState(false);
 
   const detectLanguage = (filename: string): string => {
     const ext = filename.split(".").pop()?.toLowerCase();
@@ -52,9 +53,7 @@ const BatchFileUpload = ({ onComplete, isLoading, setIsLoading }: BatchFileUploa
     return langMap[ext || ""] || "javascript";
   };
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = Array.from(e.target.files || []);
-    
+  const processFiles = async (selectedFiles: File[]) => {
     const validFiles = selectedFiles.filter(file => {
       const ext = "." + file.name.split(".").pop()?.toLowerCase();
       return SUPPORTED_EXTENSIONS.includes(ext);
@@ -96,6 +95,36 @@ const BatchFileUpload = ({ onComplete, isLoading, setIsLoading }: BatchFileUploa
     }
 
     return filesWithContent;
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(e.target.files || []);
+    return processFiles(selectedFiles);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isLoading) {
+      setIsDragOver(true);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+
+    if (isLoading) return;
+
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    await processFiles(droppedFiles);
   };
 
   const removeFile = (name: string) => {
@@ -284,11 +313,23 @@ const BatchFileUpload = ({ onComplete, isLoading, setIsLoading }: BatchFileUploa
       )}
 
       {files.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center text-center p-8 border border-dashed border-border rounded-lg bg-secondary/30">
-          <FolderOpen className="w-12 h-12 text-muted-foreground mb-4" />
-          <h4 className="font-medium mb-2">No files selected</h4>
+        <div 
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          className={`flex-1 flex flex-col items-center justify-center text-center p-8 border-2 border-dashed rounded-lg transition-all duration-200 cursor-pointer ${
+            isDragOver 
+              ? "border-primary bg-primary/10" 
+              : "border-border bg-secondary/30 hover:border-primary/50 hover:bg-secondary/50"
+          }`}
+          onClick={() => !isLoading && fileInputRef.current?.click()}
+        >
+          <Upload className={`w-12 h-12 mb-4 transition-colors ${isDragOver ? "text-primary" : "text-muted-foreground"}`} />
+          <h4 className="font-medium mb-2">
+            {isDragOver ? "Drop files here" : "Drag & drop files here"}
+          </h4>
           <p className="text-sm text-muted-foreground max-w-xs">
-            Upload multiple code files to scan them all at once. Supported: {SUPPORTED_EXTENSIONS.slice(0, 5).join(", ")}...
+            or click to browse. Supported: {SUPPORTED_EXTENSIONS.slice(0, 5).join(", ")}...
           </p>
         </div>
       ) : (
