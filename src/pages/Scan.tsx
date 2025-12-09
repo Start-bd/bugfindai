@@ -1,18 +1,24 @@
-import { useState, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
-import CodeInput from "@/components/CodeInput";
+import CodeInput, { CodeInputRef } from "@/components/CodeInput";
 import ResultsPanel from "@/components/ResultsPanel";
+import BatchFileUpload from "@/components/BatchFileUpload";
+import BugPatternTemplates from "@/components/BugPatternTemplates";
 import { Issue } from "@/components/IssueCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Code, Files, BookOpen } from "lucide-react";
 
 const Scan = () => {
   const [issues, setIssues] = useState<Issue[]>([]);
   const [summary, setSummary] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [currentLanguage, setCurrentLanguage] = useState<string>("javascript");
+  const [activeInputTab, setActiveInputTab] = useState("single");
+  const codeInputRef = useRef<CodeInputRef>(null);
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -113,6 +119,32 @@ const Scan = () => {
     }
   };
 
+  const handleBatchComplete = (results: { name: string; issues: Issue[]; summary?: string }[]) => {
+    const allIssues = results.flatMap(r => r.issues);
+    setIssues(allIssues);
+    
+    const summaryParts = results
+      .filter(r => r.issues.length > 0)
+      .map(r => `${r.name}: ${r.issues.length} issue(s)`)
+      .join(". ");
+    
+    setSummary(
+      summaryParts 
+        ? `Batch scan complete. ${summaryParts}` 
+        : "Batch scan complete. No issues found!"
+    );
+  };
+
+  const handleUseExample = (code: string) => {
+    setActiveInputTab("single");
+    // We'll set the code through the ref after tab switches
+    setTimeout(() => {
+      if (codeInputRef.current) {
+        codeInputRef.current.clear();
+      }
+    }, 100);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -140,9 +172,40 @@ const Scan = () => {
           </div>
 
           <div className="grid lg:grid-cols-2 gap-6 min-h-[calc(100vh-220px)]">
-            {/* Left: Code Input */}
+            {/* Left: Code Input with Tabs */}
             <div className="glass rounded-2xl p-6 border-primary/10">
-              <CodeInput onSubmit={handleSubmit} isLoading={isLoading} />
+              <Tabs value={activeInputTab} onValueChange={setActiveInputTab} className="h-full flex flex-col">
+                <TabsList className="grid w-full grid-cols-3 mb-4">
+                  <TabsTrigger value="single" className="flex items-center gap-2">
+                    <Code className="w-4 h-4" />
+                    Single File
+                  </TabsTrigger>
+                  <TabsTrigger value="batch" className="flex items-center gap-2">
+                    <Files className="w-4 h-4" />
+                    Batch Scan
+                  </TabsTrigger>
+                  <TabsTrigger value="templates" className="flex items-center gap-2">
+                    <BookOpen className="w-4 h-4" />
+                    Templates
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="single" className="flex-1 mt-0 data-[state=inactive]:hidden">
+                  <CodeInput ref={codeInputRef} onSubmit={handleSubmit} isLoading={isLoading} />
+                </TabsContent>
+
+                <TabsContent value="batch" className="flex-1 mt-0 data-[state=inactive]:hidden">
+                  <BatchFileUpload 
+                    onComplete={handleBatchComplete} 
+                    isLoading={isLoading}
+                    setIsLoading={setIsLoading}
+                  />
+                </TabsContent>
+
+                <TabsContent value="templates" className="flex-1 mt-0 data-[state=inactive]:hidden">
+                  <BugPatternTemplates onUseExample={handleUseExample} />
+                </TabsContent>
+              </Tabs>
             </div>
 
             {/* Right: Results Panel */}
