@@ -1,10 +1,11 @@
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import IssueCard, { Issue } from "./IssueCard";
-import { Download, FileJson, FileText, Filter, Bug, Shield, Zap, AlertTriangle, Loader2, Copy, Check, FileCode, X, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Download, FileJson, FileText, Filter, Bug, Shield, Zap, AlertTriangle, Loader2, Copy, Check, FileCode, X, ArrowUpDown, ArrowUp, ArrowDown, StopCircle } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { jsPDF } from "jspdf";
 import { useToast } from "@/hooks/use-toast";
+import AnimatedCounter from "./AnimatedCounter";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,6 +19,8 @@ interface ResultsPanelProps {
   summary?: string;
   language?: string;
   streamingText?: string;
+  onCancel?: () => void;
+  liveIssueCount?: number;
 }
 
 type FilterType = "all" | "bug" | "vulnerability" | "performance" | "logic" | "bestPractice" | "best-practice";
@@ -41,7 +44,7 @@ const severityOrder: Record<string, number> = {
   low: 3,
 };
 
-const ResultsPanel = ({ issues, isLoading, summary, language = "javascript", streamingText }: ResultsPanelProps) => {
+const ResultsPanel = ({ issues, isLoading, summary, language = "javascript", streamingText, onCancel, liveIssueCount }: ResultsPanelProps) => {
   const [filter, setFilter] = useState<FilterType>("all");
   const [fileFilter, setFileFilter] = useState<string | null>(null);
   const [sortField, setSortField] = useState<SortField>("severity");
@@ -347,12 +350,36 @@ const ResultsPanel = ({ issues, isLoading, summary, language = "javascript", str
         <p className="text-muted-foreground text-sm">
           Scanning for bugs, vulnerabilities, and performance issues
         </p>
-        {streamingText && (
-          <div className="mt-4 max-w-md">
-            <div className="text-xs text-muted-foreground font-mono bg-secondary/50 rounded-lg p-3 max-h-32 overflow-y-auto text-left">
-              <span className="animate-pulse">●</span> Receiving analysis...
+        
+        {/* Live issue counter */}
+        {typeof liveIssueCount === 'number' && (
+          <div className="mt-4 flex items-center gap-2 text-sm">
+            <span className="text-muted-foreground">Issues found:</span>
+            <div className="bg-primary/10 px-3 py-1 rounded-full">
+              <AnimatedCounter value={liveIssueCount} className="font-bold text-primary text-lg" />
             </div>
           </div>
+        )}
+
+        {streamingText && (
+          <div className="mt-3 max-w-md">
+            <div className="text-xs text-muted-foreground font-mono bg-secondary/50 rounded-lg p-3 max-h-24 overflow-y-auto text-left">
+              <span className="animate-pulse text-primary">●</span> Receiving analysis...
+            </div>
+          </div>
+        )}
+
+        {/* Cancel button */}
+        {onCancel && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={onCancel}
+            className="mt-4 gap-2"
+          >
+            <StopCircle className="w-4 h-4" />
+            Cancel Analysis
+          </Button>
         )}
       </div>
     );
