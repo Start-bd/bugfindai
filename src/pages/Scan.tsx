@@ -9,6 +9,7 @@ import { Issue } from "@/components/IssueCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useStreamingAnalysis } from "@/hooks/useStreamingAnalysis";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Code, Files, BookOpen } from "lucide-react";
 
@@ -18,10 +19,19 @@ const Scan = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentLanguage, setCurrentLanguage] = useState<string>("javascript");
   const [activeInputTab, setActiveInputTab] = useState("single");
+  const [streamingText, setStreamingText] = useState<string>("");
   const codeInputRef = useRef<CodeInputRef>(null);
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  
+  const { 
+    isStreaming, 
+    issues: streamedIssues, 
+    summary: streamedSummary, 
+    analyzeCode, 
+    streamedContent 
+  } = useStreamingAnalysis();
 
   const detectLanguage = (code: string, filename?: string): string => {
     if (filename) {
@@ -56,36 +66,23 @@ const Scan = () => {
     setIsLoading(true);
     setIssues([]);
     setSummary("");
+    setStreamingText("");
 
     const language = detectLanguage(code, filename);
     setCurrentLanguage(language);
 
     try {
-      const { data, error } = await supabase.functions.invoke('analyze-code', {
-        body: { code, language }
+      const result = await analyzeCode(code, language, (content) => {
+        setStreamingText(content);
       });
 
-      if (error) {
-        console.error("Analysis error:", error);
-        toast({
-          title: "Analysis failed",
-          description: error.message || "Could not analyze the code. Please try again.",
-          variant: "destructive",
-        });
+      if (!result) {
+        // Aborted
         return;
       }
 
-      if (data.error) {
-        toast({
-          title: "Analysis error",
-          description: data.error,
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const analysisIssues = data.issues || [];
-      const analysisSummary = data.summary || "Analysis complete.";
+      const analysisIssues = result.issues || [];
+      const analysisSummary = result.summary || "Analysis complete.";
       
       setIssues(analysisIssues);
       setSummary(analysisSummary);
@@ -94,13 +91,13 @@ const Scan = () => {
       if (user) {
         const { error: saveError } = await supabase
           .from('scan_history')
-          .insert({
+          .insert([{
             user_id: user.id,
-            code: code.substring(0, 10000), // Limit code size
+            code: code.substring(0, 10000),
             language,
-            issues: analysisIssues,
+            issues: analysisIssues as unknown as import('@/integrations/supabase/types').Json,
             summary: analysisSummary,
-          });
+          }]);
 
         if (saveError) {
           console.error("Failed to save scan:", saveError);
@@ -111,11 +108,12 @@ const Scan = () => {
       console.error("Analysis failed:", error);
       toast({
         title: "Analysis failed",
-        description: "An unexpected error occurred. Please try again.",
+        description: error instanceof Error ? error.message : "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
+      setStreamingText("");
     }
   };
 
@@ -210,7 +208,13 @@ const Scan = () => {
 
             {/* Right: Results Panel */}
             <div className="glass rounded-2xl p-6 border-primary/10">
-              <ResultsPanel issues={issues} isLoading={isLoading} summary={summary} language={currentLanguage} />
+              <ResultsPanel 
+                issues={isStreaming ? streamedIssues : issues} 
+                isLoading={isLoading || isStreaming} 
+                summary={isStreaming ? streamedSummary : summary} 
+                language={currentLanguage}
+                streamingText={isStreaming ? streamedContent : undefined}
+              />
             </div>
           </div>
         </div>

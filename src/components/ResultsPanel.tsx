@@ -17,6 +17,7 @@ interface ResultsPanelProps {
   isLoading: boolean;
   summary?: string;
   language?: string;
+  streamingText?: string;
 }
 
 type FilterType = "all" | "bug" | "vulnerability" | "performance" | "logic" | "bestPractice" | "best-practice";
@@ -40,7 +41,7 @@ const severityOrder: Record<string, number> = {
   low: 3,
 };
 
-const ResultsPanel = ({ issues, isLoading, summary, language = "javascript" }: ResultsPanelProps) => {
+const ResultsPanel = ({ issues, isLoading, summary, language = "javascript", streamingText }: ResultsPanelProps) => {
   const [filter, setFilter] = useState<FilterType>("all");
   const [fileFilter, setFileFilter] = useState<string | null>(null);
   const [sortField, setSortField] = useState<SortField>("severity");
@@ -334,7 +335,7 @@ const ResultsPanel = ({ issues, isLoading, summary, language = "javascript" }: R
     }
   };
 
-  if (isLoading) {
+  if (isLoading && issues.length === 0) {
     return (
       <div className="h-full flex flex-col items-center justify-center text-center p-8">
         <div className="relative w-24 h-24 mb-6">
@@ -346,6 +347,13 @@ const ResultsPanel = ({ issues, isLoading, summary, language = "javascript" }: R
         <p className="text-muted-foreground text-sm">
           Scanning for bugs, vulnerabilities, and performance issues
         </p>
+        {streamingText && (
+          <div className="mt-4 max-w-md">
+            <div className="text-xs text-muted-foreground font-mono bg-secondary/50 rounded-lg p-3 max-h-32 overflow-y-auto text-left">
+              <span className="animate-pulse">●</span> Receiving analysis...
+            </div>
+          </div>
+        )}
       </div>
     );
   }

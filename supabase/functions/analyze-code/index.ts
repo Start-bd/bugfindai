@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { code, language } = await req.json();
+    const { code, language, stream = false } = await req.json();
     
     if (!code || code.trim().length === 0) {
       return new Response(
@@ -26,7 +26,7 @@ serve(async (req) => {
       throw new Error("AI service not configured");
     }
 
-    console.log(`Analyzing code (${language || 'unknown language'}), length: ${code.length} chars`);
+    console.log(`Analyzing code (${language || 'unknown language'}), length: ${code.length} chars, streaming: ${stream}`);
 
     const systemPrompt = `You are an expert code analyzer for BugFindAI. Analyze the provided code and detect:
 1. Bugs and errors
@@ -65,6 +65,7 @@ Be thorough but practical. Focus on real issues, not style preferences.`;
           { role: "system", content: systemPrompt },
           { role: "user", content: `Analyze this ${language || ''} code:\n\n\`\`\`${language || ''}\n${code}\n\`\`\`` }
         ],
+        stream: stream,
       }),
     });
 
@@ -88,6 +89,14 @@ Be thorough but practical. Focus on real issues, not style preferences.`;
       throw new Error(`AI service error: ${response.status}`);
     }
 
+    // If streaming, return the stream directly
+    if (stream) {
+      return new Response(response.body, {
+        headers: { ...corsHeaders, 'Content-Type': 'text/event-stream' },
+      });
+    }
+
+    // Non-streaming: parse and return the complete response
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content;
 
