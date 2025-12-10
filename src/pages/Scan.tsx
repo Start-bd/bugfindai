@@ -30,8 +30,18 @@ const Scan = () => {
     issues: streamedIssues, 
     summary: streamedSummary, 
     analyzeCode, 
-    streamedContent 
+    streamedContent,
+    abort 
   } = useStreamingAnalysis();
+
+  const handleCancelAnalysis = () => {
+    abort();
+    setIsLoading(false);
+    toast({
+      title: "Analysis cancelled",
+      description: "The code analysis has been stopped.",
+    });
+  };
 
   const detectLanguage = (code: string, filename?: string): string => {
     if (filename) {
@@ -214,6 +224,8 @@ const Scan = () => {
                 summary={isStreaming ? streamedSummary : summary} 
                 language={currentLanguage}
                 streamingText={isStreaming ? streamedContent : undefined}
+                onCancel={handleCancelAnalysis}
+                liveIssueCount={isStreaming ? streamedIssues.length : undefined}
               />
             </div>
           </div>
