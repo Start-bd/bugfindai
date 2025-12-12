@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useStreamingAnalysis } from "@/hooks/useStreamingAnalysis";
+import { trackEvent } from "@/lib/analytics";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Code, Files, BookOpen } from "lucide-react";
 
@@ -97,6 +98,13 @@ const Scan = () => {
       setIssues(analysisIssues);
       setSummary(analysisSummary);
 
+      // Track code scan event
+      trackEvent('code_scan', {
+        language,
+        issues_found: analysisIssues.length,
+        code_length: code.length,
+      });
+
       // Save to history if user is logged in
       if (user) {
         const { error: saveError } = await supabase
@@ -141,6 +149,12 @@ const Scan = () => {
         ? `Batch scan complete. ${summaryParts}` 
         : "Batch scan complete. No issues found!"
     );
+
+    // Track batch scan event
+    trackEvent('batch_scan', {
+      file_count: results.length,
+      total_issues: allIssues.length,
+    });
   };
 
   const handleUseExample = (code: string) => {

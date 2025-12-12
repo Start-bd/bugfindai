@@ -9,6 +9,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { Issue } from "./IssueCard";
 import { useToast } from "@/hooks/use-toast";
+import { trackEvent } from "@/lib/analytics";
 
 const SUPPORTED_EXTENSIONS = [".js", ".ts", ".jsx", ".tsx", ".py", ".java", ".php", ".go", ".cpp", ".c", ".rb", ".rs"];
 
@@ -83,6 +84,13 @@ const BatchFileUpload = ({ onComplete, isLoading, setIsLoading }: BatchFileUploa
         content: await file.text(),
       }))
     );
+
+    // Track file upload event
+    const fileExtensions = validFiles.map(f => '.' + f.name.split('.').pop()?.toLowerCase()).join(', ');
+    trackEvent('file_upload', {
+      file_count: validFiles.length,
+      file_types: fileExtensions,
+    });
 
     setFiles(prev => [...prev, ...fileResults.map(f => ({ ...f, content: undefined }))]);
     
