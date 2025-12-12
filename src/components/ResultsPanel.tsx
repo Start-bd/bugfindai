@@ -5,6 +5,7 @@ import { Download, FileJson, FileText, Filter, Bug, Shield, Zap, AlertTriangle, 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { jsPDF } from "jspdf";
 import { useToast } from "@/hooks/use-toast";
+import { trackEvent } from "@/lib/analytics";
 import AnimatedCounter from "./AnimatedCounter";
 import {
   DropdownMenu,
@@ -139,6 +140,7 @@ const ResultsPanel = ({ issues, isLoading, summary, language = "javascript", str
       await navigator.clipboard.writeText(allFixes);
       setCopiedAll(true);
       setTimeout(() => setCopiedAll(false), 2000);
+      trackEvent('copy_all_fixes', { fixes_count: issuesWithFixes.length });
       toast({
         title: "Copied!",
         description: `${issuesWithFixes.length} fix${issuesWithFixes.length > 1 ? "es" : ""} copied to clipboard.`,
@@ -174,6 +176,7 @@ const ResultsPanel = ({ issues, isLoading, summary, language = "javascript", str
       a.click();
       URL.revokeObjectURL(url);
       
+      trackEvent('report_download', { format: 'json', issues_count: issues.length });
       toast({
         title: "Export successful",
         description: "JSON report downloaded successfully.",
@@ -322,6 +325,7 @@ const ResultsPanel = ({ issues, isLoading, summary, language = "javascript", str
 
       doc.save(`bugfind-report-${Date.now()}.pdf`);
       
+      trackEvent('report_download', { format: 'pdf', issues_count: issues.length });
       toast({
         title: "Export successful",
         description: "PDF report downloaded successfully.",
