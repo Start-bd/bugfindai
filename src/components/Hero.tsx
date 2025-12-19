@@ -42,9 +42,11 @@ const Hero = () => {
                 <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
               </Button>
             </Link>
-            <Button variant="glass" size="xl">
-              View Demo
-            </Button>
+            <a href="#demo-preview">
+              <Button variant="glass" size="xl">
+                View Demo
+              </Button>
+            </a>
           </div>
 
           {/* Feature pills */}
@@ -65,7 +67,7 @@ const Hero = () => {
         </div>
 
         {/* Code preview mockup */}
-        <div className="mt-20 max-w-5xl mx-auto animate-fade-in-up" style={{ animationDelay: "0.5s" }}>
+        <div id="demo-preview" className="mt-20 max-w-5xl mx-auto animate-fade-in-up scroll-mt-24" style={{ animationDelay: "0.5s" }}>
           <div className="relative">
             <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 rounded-2xl blur-xl" />
             <div className="relative glass rounded-2xl p-1 border-primary/20">
