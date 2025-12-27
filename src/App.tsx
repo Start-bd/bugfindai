@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { SyntaxThemeProvider } from "@/components/ThemeContext";
 import CookieConsent from "@/components/CookieConsent";
+import PageLoadingSkeleton from "@/components/PageLoadingSkeleton";
 
 // Lazy load pages for code splitting
 const Index = lazy(() => import("./pages/Index"));
@@ -28,7 +29,7 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <CookieConsent />
-            <Suspense fallback={<div className="min-h-screen bg-background" />}>
+            <Suspense fallback={<PageLoadingSkeleton />}>
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/scan" element={<Scan />} />
