@@ -8,7 +8,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { SyntaxThemeProvider } from "@/components/ThemeContext";
 import CookieConsent from "@/components/CookieConsent";
 import PageLoadingSkeleton from "@/components/PageLoadingSkeleton";
-
+import RouteProgressBar from "@/components/RouteProgressBar";
 // Lazy load pages for code splitting
 const Index = lazy(() => import("./pages/Index"));
 const Scan = lazy(() => import("./pages/Scan"));
@@ -28,6 +28,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <RouteProgressBar />
             <CookieConsent />
             <Suspense fallback={<PageLoadingSkeleton />}>
               <Routes>
