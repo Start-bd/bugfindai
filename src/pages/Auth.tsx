@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Bug, Mail, Lock, ArrowLeft } from "lucide-react";
-import { Link } from "react-router-dom";
+import { PrefetchLink } from "@/components/PrefetchLink";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -104,19 +104,19 @@ const Auth = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <div className="p-4">
-        <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+        <PrefetchLink to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
           <ArrowLeft className="w-4 h-4" />
           Back to home
-        </Link>
+        </PrefetchLink>
       </div>
 
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <Link to="/" className="inline-flex items-center gap-2 mb-4">
+            <PrefetchLink to="/" className="inline-flex items-center gap-2 mb-4">
               <Bug className="w-8 h-8 text-primary" />
               <span className="text-2xl font-bold text-foreground">BugFindAI</span>
-            </Link>
+            </PrefetchLink>
             <h1 className="text-2xl font-bold text-foreground">
               {isLogin ? "Welcome back" : "Create your account"}
             </h1>
