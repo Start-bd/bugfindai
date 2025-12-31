@@ -1,4 +1,5 @@
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { PrefetchLink } from "@/components/PrefetchLink";
 import { Button } from "@/components/ui/button";
 import { Bug, Zap, LogOut, User, History } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -24,7 +25,7 @@ const Navbar = () => {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-border/50">
       <div className="container mx-auto px-6 h-16 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2 group">
+        <PrefetchLink to="/" className="flex items-center gap-2 group">
           <div className="relative">
             <Bug className="w-7 h-7 text-primary transition-transform group-hover:scale-110" />
             <Zap className="w-3 h-3 text-primary absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -32,14 +33,14 @@ const Navbar = () => {
           <span className="text-xl font-bold text-foreground">
             BugFind<span className="text-primary">AI</span>
           </span>
-        </Link>
+        </PrefetchLink>
 
         <div className="flex items-center gap-2">
-          <Link to="/scan">
+          <PrefetchLink to="/scan">
             <Button variant="ghost" size="sm">
               Scanner
             </Button>
-          </Link>
+          </PrefetchLink>
           
           <SyntaxThemeSelector />
           <ThemeToggle />
@@ -66,16 +67,16 @@ const Navbar = () => {
             </DropdownMenu>
           ) : (
             <>
-              <Link to="/auth">
+              <PrefetchLink to="/auth">
                 <Button variant="ghost" size="sm">
                   Sign In
                 </Button>
-              </Link>
-              <Link to="/scan">
+              </PrefetchLink>
+              <PrefetchLink to="/scan">
                 <Button variant="hero" size="sm">
                   Start Scanning
                 </Button>
-              </Link>
+              </PrefetchLink>
             </>
           )}
         </div>

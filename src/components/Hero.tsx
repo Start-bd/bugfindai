@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { PrefetchLink } from "@/components/PrefetchLink";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles, Shield, Zap } from "lucide-react";
 
@@ -36,12 +36,12 @@ const Hero = () => {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 animate-fade-in" style={{ animationDelay: "0.3s" }}>
-            <Link to="/scan">
+            <PrefetchLink to="/scan">
               <Button variant="hero" size="xl" className="group">
                 Start Scanning Free
                 <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
               </Button>
-            </Link>
+            </PrefetchLink>
             <a href="#demo-preview">
               <Button variant="glass" size="xl">
                 View Demo
