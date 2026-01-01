@@ -83,6 +83,41 @@ export async function getPendingItems(): Promise<QueuedAnalysis[]> {
   });
 }
 
+export async function getFailedItems(): Promise<QueuedAnalysis[]> {
+  const db = await openDB();
+  
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(STORE_NAME, 'readonly');
+    const store = transaction.objectStore(STORE_NAME);
+    const index = store.index('status');
+    const request = index.getAll('failed');
+    
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+export async function resetFailedItem(id: string): Promise<void> {
+  const db = await openDB();
+  
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(STORE_NAME, 'readwrite');
+    const store = transaction.objectStore(STORE_NAME);
+    const getRequest = store.get(id);
+    
+    getRequest.onsuccess = () => {
+      const item = getRequest.result;
+      if (item) {
+        item.status = 'pending';
+        item.retryCount = 0;
+        store.put(item);
+      }
+      resolve();
+    };
+    getRequest.onerror = () => reject(getRequest.error);
+  });
+}
+
 export async function getAllItems(): Promise<QueuedAnalysis[]> {
   const db = await openDB();
   
