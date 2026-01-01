@@ -10,6 +10,7 @@ import CookieConsent from "@/components/CookieConsent";
 import PageLoadingSkeleton from "@/components/PageLoadingSkeleton";
 import RouteProgressBar from "@/components/RouteProgressBar";
 import OfflineIndicator from "@/components/OfflineIndicator";
+import OfflineQueueIndicator from "@/components/OfflineQueueIndicator";
 // Lazy load pages for code splitting
 const Index = lazy(() => import("./pages/Index"));
 const Scan = lazy(() => import("./pages/Scan"));
@@ -31,6 +32,7 @@ const App = () => (
           <BrowserRouter>
             <RouteProgressBar />
             <OfflineIndicator />
+            <OfflineQueueIndicator />
             <CookieConsent />
             <Suspense fallback={<PageLoadingSkeleton />}>
               <Routes>
