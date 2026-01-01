@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bugfindai-v1';
+const CACHE_NAME = 'bugfindai-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -6,6 +6,69 @@ const STATIC_ASSETS = [
   '/favicon.jpg',
   '/apple-touch-icon.jpg'
 ];
+
+// IndexedDB helpers for background sync
+const DB_NAME = 'bugfindai-offline';
+const STORE_NAME = 'pending-analyses';
+
+async function openDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, 1);
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result);
+  });
+}
+
+async function getPendingItems() {
+  try {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(STORE_NAME, 'readonly');
+      const store = transaction.objectStore(STORE_NAME);
+      const index = store.index('status');
+      const request = index.getAll('pending');
+      request.onsuccess = () => resolve(request.result || []);
+      request.onerror = () => reject(request.error);
+    });
+  } catch {
+    return [];
+  }
+}
+
+async function updateItemStatus(db, id, status, retryCount) {
+  return new Promise((resolve) => {
+    try {
+      const transaction = db.transaction(STORE_NAME, 'readwrite');
+      const store = transaction.objectStore(STORE_NAME);
+      const getRequest = store.get(id);
+      getRequest.onsuccess = () => {
+        const item = getRequest.result;
+        if (item) {
+          item.status = status;
+          if (retryCount !== undefined) item.retryCount = retryCount;
+          store.put(item);
+        }
+        resolve();
+      };
+      getRequest.onerror = () => resolve();
+    } catch {
+      resolve();
+    }
+  });
+}
+
+async function removeItem(db, id) {
+  return new Promise((resolve) => {
+    try {
+      const transaction = db.transaction(STORE_NAME, 'readwrite');
+      const store = transaction.objectStore(STORE_NAME);
+      store.delete(id);
+      resolve();
+    } catch {
+      resolve();
+    }
+  });
+}
 
 // Install event - cache static assets
 self.addEventListener('install', (event) => {
@@ -30,6 +93,49 @@ self.addEventListener('activate', (event) => {
   );
   self.clients.claim();
 });
+
+// Background sync for queued analyses
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'sync-analyses') {
+    event.waitUntil(processQueuedAnalyses());
+  }
+});
+
+async function processQueuedAnalyses() {
+  try {
+    const pending = await getPendingItems();
+    if (pending.length === 0) return;
+
+    const db = await openDB();
+    
+    for (const item of pending) {
+      try {
+        await updateItemStatus(db, item.id, 'processing');
+        
+        // Note: We can't access env vars in service worker, 
+        // so we'll notify the client to process the queue
+        await notifyClients({ type: 'SYNC_COMPLETE' });
+        
+      } catch (error) {
+        console.error('Background sync failed for item:', item.id, error);
+        if (item.retryCount < 3) {
+          await updateItemStatus(db, item.id, 'pending', item.retryCount + 1);
+        } else {
+          await updateItemStatus(db, item.id, 'failed');
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Background sync failed:', error);
+  }
+}
+
+async function notifyClients(message) {
+  const clients = await self.clients.matchAll({ type: 'window' });
+  clients.forEach((client) => {
+    client.postMessage(message);
+  });
+}
 
 // Fetch event - network first, fallback to cache
 self.addEventListener('fetch', (event) => {
