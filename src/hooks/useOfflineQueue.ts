@@ -3,7 +3,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { 
   addToQueue, 
-  getPendingItems, 
+  getPendingItems,
+  getFailedItems,
+  resetFailedItem,
   removeFromQueue, 
   updateItemStatus,
   getQueueCount,
@@ -20,17 +22,20 @@ interface AnalysisResult {
 
 export function useOfflineQueue() {
   const [pendingCount, setPendingCount] = useState(0);
+  const [failedCount, setFailedCount] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
   const [results, setResults] = useState<AnalysisResult[]>([]);
   const { toast } = useToast();
 
-  // Update pending count
-  const refreshPendingCount = useCallback(async () => {
+  // Update pending and failed counts
+  const refreshCounts = useCallback(async () => {
     try {
       const count = await getQueueCount();
+      const failed = await getFailedItems();
       setPendingCount(count);
+      setFailedCount(failed.length);
     } catch (error) {
-      console.error('Failed to get queue count:', error);
+      console.error('Failed to get queue counts:', error);
     }
   }, []);
 
@@ -38,7 +43,7 @@ export function useOfflineQueue() {
   const queueAnalysis = useCallback(async (code: string, language: string) => {
     try {
       const id = await addToQueue(code, language);
-      await refreshPendingCount();
+      await refreshCounts();
       
       toast({
         title: "Analysis queued",
@@ -55,7 +60,7 @@ export function useOfflineQueue() {
       });
       return null;
     }
-  }, [refreshPendingCount, toast]);
+  }, [refreshCounts, toast]);
 
   // Process a single queued item
   const processItem = useCallback(async (item: QueuedAnalysis): Promise<AnalysisResult | null> => {
@@ -115,7 +120,7 @@ export function useOfflineQueue() {
       }
     }
     
-    await refreshPendingCount();
+    await refreshCounts();
     setIsProcessing(false);
     
     if (processedResults.length > 0) {
@@ -127,7 +132,28 @@ export function useOfflineQueue() {
     }
     
     return processedResults;
-  }, [isProcessing, processItem, refreshPendingCount, toast]);
+  }, [isProcessing, processItem, refreshCounts, toast]);
+
+  // Retry all failed items
+  const retryFailed = useCallback(async () => {
+    if (isProcessing || !navigator.onLine) return;
+    
+    const failed = await getFailedItems();
+    if (failed.length === 0) return;
+    
+    // Reset all failed items to pending
+    for (const item of failed) {
+      await resetFailedItem(item.id);
+    }
+    
+    toast({
+      title: "Retrying failed analyses",
+      description: `Retrying ${failed.length} failed analysis${failed.length > 1 ? 'es' : ''}...`,
+    });
+    
+    await refreshCounts();
+    await processQueue();
+  }, [isProcessing, processQueue, refreshCounts, toast]);
 
   // Clear processed results
   const clearResults = useCallback(() => {
@@ -146,7 +172,7 @@ export function useOfflineQueue() {
     window.addEventListener('online', handleOnline);
     
     // Initial count
-    refreshPendingCount();
+    refreshCounts();
     
     // Process any pending items if we're already online
     if (navigator.onLine) {
@@ -156,13 +182,13 @@ export function useOfflineQueue() {
     return () => {
       window.removeEventListener('online', handleOnline);
     };
-  }, [processQueue, refreshPendingCount]);
+  }, [processQueue, refreshCounts]);
 
   // Listen for messages from service worker
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.data?.type === 'SYNC_COMPLETE') {
-        refreshPendingCount();
+        refreshCounts();
         processQueue();
       }
     };
@@ -172,15 +198,17 @@ export function useOfflineQueue() {
     return () => {
       navigator.serviceWorker?.removeEventListener('message', handleMessage);
     };
-  }, [processQueue, refreshPendingCount]);
+  }, [processQueue, refreshCounts]);
 
   return {
     pendingCount,
+    failedCount,
     isProcessing,
     results,
     queueAnalysis,
     processQueue,
+    retryFailed,
     clearResults,
-    refreshPendingCount,
+    refreshCounts,
   };
 }

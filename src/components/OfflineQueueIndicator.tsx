@@ -1,4 +1,4 @@
-import { Clock, Loader2, CheckCircle } from "lucide-react";
+import { Clock, Loader2, CheckCircle, AlertCircle, RotateCcw } from "lucide-react";
 import { useOfflineQueue } from "@/hooks/useOfflineQueue";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,9 +13,9 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 const OfflineQueueIndicator = () => {
-  const { pendingCount, isProcessing, results, processQueue, clearResults } = useOfflineQueue();
+  const { pendingCount, failedCount, isProcessing, results, processQueue, retryFailed, clearResults } = useOfflineQueue();
 
-  if (pendingCount === 0 && results.length === 0) return null;
+  if (pendingCount === 0 && failedCount === 0 && results.length === 0) return null;
 
   return (
     <Dialog>
@@ -27,6 +27,8 @@ const OfflineQueueIndicator = () => {
         >
           {isProcessing ? (
             <Loader2 className="h-4 w-4 animate-spin" />
+          ) : failedCount > 0 ? (
+            <AlertCircle className="h-4 w-4 text-destructive" />
           ) : results.length > 0 ? (
             <CheckCircle className="h-4 w-4 text-primary" />
           ) : (
@@ -35,6 +37,8 @@ const OfflineQueueIndicator = () => {
           <span>
             {isProcessing
               ? "Processing..."
+              : failedCount > 0
+              ? `${failedCount} failed`
               : results.length > 0
               ? `${results.length} completed`
               : `${pendingCount} queued`}
@@ -65,6 +69,30 @@ const OfflineQueueIndicator = () => {
                     </>
                   ) : (
                     "Process Now"
+                  )}
+                </Button>
+              )}
+            </div>
+          )}
+
+          {failedCount > 0 && (
+            <div className="flex items-center justify-between p-3 bg-destructive/10 rounded-lg border border-destructive/20">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 text-destructive" />
+                <span className="text-sm">{failedCount} failed analysis{failedCount > 1 ? 'es' : ''}</span>
+              </div>
+              {navigator.onLine && (
+                <Button size="sm" variant="outline" onClick={retryFailed} disabled={isProcessing}>
+                  {isProcessing ? (
+                    <>
+                      <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                      Retrying
+                    </>
+                  ) : (
+                    <>
+                      <RotateCcw className="h-3 w-3 mr-1" />
+                      Retry All
+                    </>
                   )}
                 </Button>
               )}
