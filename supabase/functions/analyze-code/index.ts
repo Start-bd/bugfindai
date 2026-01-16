@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,6 +12,37 @@ serve(async (req) => {
   }
 
   try {
+    // Authentication check
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      console.error("Missing or invalid authorization header");
+      return new Response(
+        JSON.stringify({ error: 'Missing authorization header' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    // Validate JWT token
+    const token = authHeader.replace('Bearer ', '');
+    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
+    
+    if (claimsError || !claimsData?.claims) {
+      console.error("JWT validation failed:", claimsError?.message);
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const userId = claimsData.claims.sub;
+    console.log(`Authenticated user: ${userId}`);
+
     const { code, language, stream = false } = await req.json();
     
     if (!code || code.trim().length === 0) {
@@ -26,7 +58,7 @@ serve(async (req) => {
       throw new Error("AI service not configured");
     }
 
-    console.log(`Analyzing code (${language || 'unknown language'}), length: ${code.length} chars, streaming: ${stream}`);
+    console.log(`Analyzing code for user ${userId} (${language || 'unknown language'}), length: ${code.length} chars, streaming: ${stream}`);
 
     const systemPrompt = `You are an expert code analyzer for BugFindAI. Analyze the provided code and detect:
 1. Bugs and errors
@@ -126,7 +158,7 @@ Be thorough but practical. Focus on real issues, not style preferences.`;
       };
     }
 
-    console.log(`Analysis complete: ${result.issues?.length || 0} issues found`);
+    console.log(`Analysis complete for user ${userId}: ${result.issues?.length || 0} issues found`);
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
