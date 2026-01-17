@@ -6,6 +6,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import KeyboardShortcuts from "./KeyboardShortcuts";
 import { useSyntaxStyle } from "@/hooks/useSyntaxStyle";
+import { logger } from "@/lib/logger";
 
 interface CodeInputProps {
   onSubmit: (code: string, filename?: string) => void;
@@ -167,7 +168,7 @@ const CodeInput = forwardRef<CodeInputRef, CodeInputProps>(({ onSubmit, isLoadin
       setActiveTab("paste"); // Switch to paste tab to show the code
       
     } catch (error) {
-      console.error("GitHub fetch error:", error);
+      logger.error("GitHub fetch error:", error);
       setGithubError("Failed to fetch file. Please check the URL and try again.");
     } finally {
       setIsFetchingGithub(false);

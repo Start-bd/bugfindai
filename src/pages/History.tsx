@@ -9,6 +9,7 @@ import { Clock, Code, AlertTriangle, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { Issue } from "@/components/IssueCard";
+import { logger } from "@/lib/logger";
 
 interface ScanRecord {
   id: string;
@@ -55,7 +56,7 @@ const History = () => {
       
       setScans(typedScans);
     } catch (error) {
-      console.error("Failed to fetch scans:", error);
+      logger.error("Failed to fetch scans:", error);
       toast({
         title: "Error",
         description: "Failed to load scan history.",
@@ -81,7 +82,7 @@ const History = () => {
         description: "Scan removed from history.",
       });
     } catch (error) {
-      console.error("Failed to delete scan:", error);
+      logger.error("Failed to delete scan:", error);
       toast({
         title: "Error",
         description: "Failed to delete scan.",
