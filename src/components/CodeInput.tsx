@@ -20,6 +20,7 @@ export interface CodeInputRef {
 }
 
 const SUPPORTED_EXTENSIONS = [".js", ".ts", ".jsx", ".tsx", ".py", ".java", ".php", ".go", ".cpp", ".c", ".rb", ".rs"];
+const MAX_CODE_SIZE = 100000; // 100KB - matches server limit
 
 const CodeInput = forwardRef<CodeInputRef, CodeInputProps>(({ onSubmit, isLoading }, ref) => {
   const syntaxStyle = useSyntaxStyle();
@@ -301,10 +302,13 @@ function example() {
               />
             )}
             
-            {/* Line count and language indicator */}
+            {/* Line count, size, and language indicator */}
             <div className="absolute bottom-3 right-3 flex items-center gap-2 text-xs text-muted-foreground/70">
               {code && <span className="bg-secondary/80 px-2 py-0.5 rounded">{language}</span>}
               <span className="bg-secondary/80 px-2 py-0.5 rounded">{code.split("\n").length} lines</span>
+              <span className={`px-2 py-0.5 rounded ${code.length > MAX_CODE_SIZE ? 'bg-destructive text-destructive-foreground' : 'bg-secondary/80'}`}>
+                {Math.round(code.length / 1000)}KB / {MAX_CODE_SIZE / 1000}KB
+              </span>
             </div>
           </div>
         </TabsContent>
@@ -360,10 +364,17 @@ function example() {
         </TabsContent>
       </Tabs>
 
+      {code.length > MAX_CODE_SIZE && (
+        <div className="mt-4 flex items-center gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>Code exceeds the maximum size of {MAX_CODE_SIZE / 1000}KB. Please reduce the code size to submit.</span>
+        </div>
+      )}
+
       <div className="mt-4 flex items-center gap-4">
         <Button
           onClick={handleSubmit}
-          disabled={!code.trim() || isLoading}
+          disabled={!code.trim() || isLoading || code.length > MAX_CODE_SIZE}
           variant="hero"
           size="lg"
           className="flex-1"
@@ -384,7 +395,7 @@ function example() {
         <KeyboardShortcuts
           onScan={handleSubmit}
           onClear={clearFile}
-          canScan={code.trim().length > 0 && !isLoading}
+          canScan={code.trim().length > 0 && !isLoading && code.length <= MAX_CODE_SIZE}
           canClear={code.trim().length > 0 || !!uploadedFile || !!githubUrl}
         />
       </div>
