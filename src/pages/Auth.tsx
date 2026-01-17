@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Bug, Mail, Lock, ArrowLeft } from "lucide-react";
 import { PrefetchLink } from "@/components/PrefetchLink";
+import { logger } from "@/lib/logger";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -86,7 +87,7 @@ const Auth = () => {
         });
       }
     } catch (error: any) {
-      console.error("Auth error:", error);
+      logger.error("Auth error:", error);
       let message = error.message || "An error occurred";
       if (error.message?.includes("User already registered")) {
         message = "This email is already registered. Try logging in instead.";

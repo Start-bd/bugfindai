@@ -13,6 +13,7 @@ import { useStreamingAnalysis } from "@/hooks/useStreamingAnalysis";
 import { trackEvent } from "@/lib/analytics";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Code, Files, BookOpen } from "lucide-react";
+import { logger } from "@/lib/logger";
 
 const Scan = () => {
   const [issues, setIssues] = useState<Issue[]>([]);
@@ -118,15 +119,15 @@ const Scan = () => {
           }]);
 
         if (saveError) {
-          console.error("Failed to save scan:", saveError);
+          logger.error("Failed to save scan:", saveError);
         }
       }
 
     } catch (error) {
-      console.error("Analysis failed:", error);
+      logger.error("Analysis failed:", error);
       toast({
         title: "Analysis failed",
-        description: error instanceof Error ? error.message : "An unexpected error occurred. Please try again.",
+        description: logger.getUserMessage(error, "An unexpected error occurred. Please try again."),
         variant: "destructive",
       });
     } finally {
