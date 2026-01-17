@@ -43,11 +43,21 @@ serve(async (req) => {
     const userId = claimsData.claims.sub;
     console.log(`Authenticated user: ${userId}`);
 
+    const MAX_CODE_SIZE = 100000; // 100KB reasonable limit
+    
     const { code, language, stream = false } = await req.json();
     
     if (!code || code.trim().length === 0) {
       return new Response(
         JSON.stringify({ error: 'No code provided' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (code.length > MAX_CODE_SIZE) {
+      console.warn(`Code size exceeded limit: ${code.length} chars (max: ${MAX_CODE_SIZE})`);
+      return new Response(
+        JSON.stringify({ error: `Code too large. Maximum size is ${MAX_CODE_SIZE} characters (${Math.round(MAX_CODE_SIZE / 1000)}KB).` }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
