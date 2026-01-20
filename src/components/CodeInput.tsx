@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useImperativeHandle, forwardRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload, Code, Loader2, X, FileCode, Github, Link, AlertCircle } from "lucide-react";
+import { Upload, Code, Loader2, X, FileCode, Github, Link, AlertCircle, AlertTriangle } from "lucide-react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,7 @@ export interface CodeInputRef {
 
 const SUPPORTED_EXTENSIONS = [".js", ".ts", ".jsx", ".tsx", ".py", ".java", ".php", ".go", ".cpp", ".c", ".rb", ".rs"];
 const MAX_CODE_SIZE = 100000; // 100KB - matches server limit
+const WARNING_THRESHOLD = 0.8; // Show warning at 80% of limit
 
 const CodeInput = forwardRef<CodeInputRef, CodeInputProps>(({ onSubmit, isLoading }, ref) => {
   const syntaxStyle = useSyntaxStyle();
@@ -306,7 +307,16 @@ function example() {
             <div className="absolute bottom-3 right-3 flex items-center gap-2 text-xs text-muted-foreground/70">
               {code && <span className="bg-secondary/80 px-2 py-0.5 rounded">{language}</span>}
               <span className="bg-secondary/80 px-2 py-0.5 rounded">{code.split("\n").length} lines</span>
-              <span className={`px-2 py-0.5 rounded ${code.length > MAX_CODE_SIZE ? 'bg-destructive text-destructive-foreground' : 'bg-secondary/80'}`}>
+              <span className={`px-2 py-0.5 rounded flex items-center gap-1 ${
+                code.length > MAX_CODE_SIZE 
+                  ? 'bg-destructive text-destructive-foreground' 
+                  : code.length > MAX_CODE_SIZE * WARNING_THRESHOLD 
+                    ? 'bg-yellow-500/20 text-yellow-600 dark:text-yellow-400' 
+                    : 'bg-secondary/80'
+              }`}>
+                {code.length > MAX_CODE_SIZE * WARNING_THRESHOLD && code.length <= MAX_CODE_SIZE && (
+                  <AlertTriangle className="w-3 h-3" />
+                )}
                 {Math.round(code.length / 1000)}KB / {MAX_CODE_SIZE / 1000}KB
               </span>
             </div>
@@ -363,6 +373,13 @@ function example() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {code.length > MAX_CODE_SIZE * WARNING_THRESHOLD && code.length <= MAX_CODE_SIZE && (
+        <div className="mt-4 flex items-center gap-2 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-600 dark:text-yellow-400 text-sm">
+          <AlertTriangle className="w-4 h-4 shrink-0" />
+          <span>Approaching size limit ({Math.round((code.length / MAX_CODE_SIZE) * 100)}% of {MAX_CODE_SIZE / 1000}KB used).</span>
+        </div>
+      )}
 
       {code.length > MAX_CODE_SIZE && (
         <div className="mt-4 flex items-center gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
