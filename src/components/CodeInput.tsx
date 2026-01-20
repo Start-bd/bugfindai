@@ -307,18 +307,45 @@ function example() {
             <div className="absolute bottom-3 right-3 flex items-center gap-2 text-xs text-muted-foreground/70">
               {code && <span className="bg-secondary/80 px-2 py-0.5 rounded">{language}</span>}
               <span className="bg-secondary/80 px-2 py-0.5 rounded">{code.split("\n").length} lines</span>
-              <span className={`px-2 py-0.5 rounded flex items-center gap-1 ${
+              
+              {/* Size indicator with progress bar */}
+              <div className={`px-2 py-1 rounded flex items-center gap-2 ${
                 code.length > MAX_CODE_SIZE 
-                  ? 'bg-destructive text-destructive-foreground' 
+                  ? 'bg-destructive/20' 
                   : code.length > MAX_CODE_SIZE * WARNING_THRESHOLD 
-                    ? 'bg-yellow-500/20 text-yellow-600 dark:text-yellow-400' 
+                    ? 'bg-yellow-500/20' 
                     : 'bg-secondary/80'
               }`}>
                 {code.length > MAX_CODE_SIZE * WARNING_THRESHOLD && code.length <= MAX_CODE_SIZE && (
-                  <AlertTriangle className="w-3 h-3" />
+                  <AlertTriangle className="w-3 h-3 text-yellow-600 dark:text-yellow-400" />
                 )}
-                {Math.round(code.length / 1000)}KB / {MAX_CODE_SIZE / 1000}KB
-              </span>
+                {code.length > MAX_CODE_SIZE && (
+                  <AlertCircle className="w-3 h-3 text-destructive" />
+                )}
+                <div className="flex items-center gap-1.5">
+                  <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full transition-all duration-300 rounded-full ${
+                        code.length > MAX_CODE_SIZE 
+                          ? 'bg-destructive' 
+                          : code.length > MAX_CODE_SIZE * WARNING_THRESHOLD 
+                            ? 'bg-yellow-500' 
+                            : 'bg-primary'
+                      }`}
+                      style={{ width: `${Math.min((code.length / MAX_CODE_SIZE) * 100, 100)}%` }}
+                    />
+                  </div>
+                  <span className={`${
+                    code.length > MAX_CODE_SIZE 
+                      ? 'text-destructive' 
+                      : code.length > MAX_CODE_SIZE * WARNING_THRESHOLD 
+                        ? 'text-yellow-600 dark:text-yellow-400' 
+                        : ''
+                  }`}>
+                    {Math.round(code.length / 1000)}KB
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </TabsContent>
