@@ -1,73 +1,172 @@
-# Welcome to your Lovable project
+# BugFindAI - Free AI Code Bug Scanner & Security Vulnerability Detector
 
-## Project info
+> **Instantly scan your code for bugs, errors, and security vulnerabilities using AI. Get fix suggestions in seconds. Free to use — no signup required.**
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+[![Website](https://img.shields.io/badge/Website-bugfindai.com-2DFF71?style=for-the-badge)](https://bugfindai.com)
+[![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-95%25-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react)](https://react.dev/)
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+## What is BugFindAI?
 
-**Use Lovable**
+**BugFindAI** is an AI-powered code analysis tool that automatically detects bugs, security vulnerabilities, code quality issues, and logic errors in your source code. Simply paste your code or upload a file and receive an instant, detailed vulnerability report with actionable fix suggestions.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+### Live Demo
+**[https://bugfindai.com](https://bugfindai.com)**
 
-Changes made via Lovable will be committed automatically to this repo.
+---
 
-**Use your preferred IDE**
+## Key Features
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- **AI Bug Detection** — Automatically find logic errors, null pointer exceptions, type mismatches, and runtime bugs
+- **Security Vulnerability Scanning** — Detect SQL injection, XSS, buffer overflows, insecure dependencies, and OWASP Top 10 issues
+- **Multi-Language Support** — JavaScript, TypeScript, Python, Java, C++, PHP, Ruby, Go, Rust, and more
+- **Instant Fix Suggestions** — AI-generated, context-aware code fixes for every detected issue
+- **Scan History** — Track and compare previous scans with full history
+- **Export Reports** — Download scan results as PDF or JSON
+- **No Signup Required** — Start scanning immediately for free
+- **Privacy First** — Your code is analyzed securely and not stored permanently
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+---
 
-Follow these steps:
+## SEO Keywords This Tool Ranks For
+
+`AI code bug scanner` · `free bug finder online` · `code vulnerability scanner` · `AI code review tool` · `security vulnerability detector` · `static code analysis` · `JavaScript bug finder` · `Python bug detector` · `TypeScript error checker` · `code quality analyzer` · `automated code review` · `AI debugging tool` · `find bugs in code online` · `free code security scanner` · `SQL injection scanner` · `XSS vulnerability checker` · `code error finder` · `AI code fixer`
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| Frontend | React 18 + TypeScript |
+| Build Tool | Vite |
+| UI Components | shadcn/ui + Radix UI |
+| Styling | Tailwind CSS |
+| Backend/Auth | Supabase |
+| AI Integration | OpenAI / Gemini API |
+| Analytics | Google Analytics 4 (consent-mode) |
+| PWA | Service Worker + Web Manifest |
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 18+ or Bun
+- npm / bun
+
+### Installation
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+# Clone the repository
+git clone https://github.com/Start-bd/bugfindai.git
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Navigate to the project directory
+cd bugfindai
 
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+# Install dependencies
+npm install
+# or with bun:
+bun install
 ```
 
-**Edit a file directly in GitHub**
+### Environment Setup
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Create a `.env` file based on `.env.example`:
 
-**Use GitHub Codespaces**
+```sh
+cp .env.example .env
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Fill in your Supabase credentials:
 
-## What technologies are used for this project?
+```env
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
 
-This project is built with:
+### Development
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+```sh
+npm run dev
+# or
+bun dev
+```
 
-## How can I deploy this project?
+Open [http://localhost:5173](http://localhost:5173) in your browser.
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+### Build for Production
 
-## Can I connect a custom domain to my Lovable project?
+```sh
+npm run build
+```
 
-Yes, you can!
+---
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## How It Works
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+1. **Paste or Upload Code** — Support for direct code paste or file upload
+2. **AI Analysis** — Advanced AI models perform deep static analysis
+3. **Vulnerability Report** — Receive a detailed report with severity levels (Critical, High, Medium, Low)
+4. **Fix Suggestions** — AI generates specific, actionable fixes for each issue
+5. **Export & Share** — Download your report or save it to your history
+
+---
+
+## Supported Languages
+
+| Language | Bug Detection | Security Scan | Fix Suggestions |
+|----------|:---:|:---:|:---:|
+| JavaScript | ✅ | ✅ | ✅ |
+| TypeScript | ✅ | ✅ | ✅ |
+| Python | ✅ | ✅ | ✅ |
+| Java | ✅ | ✅ | ✅ |
+| C++ | ✅ | ✅ | ✅ |
+| PHP | ✅ | ✅ | ✅ |
+| Ruby | ✅ | ✅ | ✅ |
+| Go | ✅ | ✅ | ✅ |
+| Rust | ✅ | ✅ | ✅ |
+
+---
+
+## Security
+
+- Never commit your `.env` file — it is listed in `.gitignore`
+- Rotate Supabase keys regularly
+- All API keys should be stored as environment variables
+- Report security vulnerabilities to: security@bugfindai.com
+
+---
+
+## Contributing
+
+Contributions are welcome! Please:
+
+1. Fork this repository
+2. Create a feature branch: `git checkout -b feature/your-feature`
+3. Commit your changes: `git commit -m 'feat: add your feature'`
+4. Push to the branch: `git push origin feature/your-feature`
+5. Open a Pull Request
+
+---
+
+## License
+
+MIT License — see [LICENSE](LICENSE) for details.
+
+---
+
+## Links
+
+- **Website:** [https://bugfindai.com](https://bugfindai.com)
+- **Scan Code Now:** [https://bugfindai.com/scan](https://bugfindai.com/scan)
+- **Privacy Policy:** [https://bugfindai.com/privacy](https://bugfindai.com/privacy)
+- **Terms of Service:** [https://bugfindai.com/terms](https://bugfindai.com/terms)
+
+---
+
+*BugFindAI — Making code safer, one scan at a time.*
