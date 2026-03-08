@@ -200,6 +200,53 @@ const CodeInput = forwardRef<CodeInputRef, CodeInputProps>(({ onSubmit, isLoadin
     setCode(e.target.value);
   };
 
+  const processDroppedFile = async (file: File) => {
+    const extension = "." + file.name.split(".").pop()?.toLowerCase();
+    if (!SUPPORTED_EXTENSIONS.includes(extension)) {
+      logger.error("Unsupported file type dropped:", file.name);
+      return;
+    }
+    const content = await file.text();
+    setUploadedFile({ name: file.name, content });
+    setCode(content);
+    setShowPreview(true);
+    setActiveTab("paste");
+  };
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current++;
+    if (e.dataTransfer.types.includes("Files")) {
+      setIsDragOver(true);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current--;
+    if (dragCounterRef.current === 0) {
+      setIsDragOver(false);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current = 0;
+    setIsDragOver(false);
+
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      await processDroppedFile(file);
+    }
+  };
   return (
     <div className="h-full flex flex-col">
       <div className="flex items-center justify-between mb-4">
