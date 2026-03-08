@@ -37,6 +37,7 @@ const CodeInput = forwardRef<CodeInputRef, CodeInputProps>(({ onSubmit, isLoadin
   const [githubError, setGithubError] = useState("");
   const [isFetchingGithub, setIsFetchingGithub] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [isShaking, setIsShaking] = useState(false);
   const dragCounterRef = useRef(0);
 
   // Expose methods to parent
@@ -492,11 +493,18 @@ function example() {
 
       <div className="mt-4 flex items-center gap-4">
         <Button
-          onClick={handleSubmit}
-          disabled={!code.trim() || isLoading || code.length > MAX_CODE_SIZE}
+          onClick={() => {
+            if (code.length > MAX_CODE_SIZE) {
+              setIsShaking(true);
+              setTimeout(() => setIsShaking(false), 500);
+              return;
+            }
+            handleSubmit();
+          }}
+          disabled={!code.trim() || isLoading}
           variant="hero"
           size="lg"
-          className="flex-1"
+          className={`flex-1 ${isShaking ? 'animate-shake' : ''} ${code.length > MAX_CODE_SIZE ? 'opacity-80 bg-destructive hover:bg-destructive/90' : ''}`}
         >
           {isLoading ? (
             <>
