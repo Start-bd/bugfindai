@@ -312,7 +312,23 @@ const CodeInput = forwardRef<CodeInputRef, CodeInputProps>(({ onSubmit, isLoadin
             </div>
           )}
 
-          <div className="flex-1 relative min-h-[350px]">
+          <div
+            className="flex-1 relative min-h-[350px]"
+            onDragEnter={handleDragEnter}
+            onDragLeave={handleDragLeave}
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+          >
+            {/* Drag overlay */}
+            {isDragOver && (
+              <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-primary bg-primary/10 backdrop-blur-sm transition-all">
+                <Upload className="w-10 h-10 text-primary mb-2 animate-bounce" />
+                <p className="text-sm font-medium text-primary">Drop file to scan</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {SUPPORTED_EXTENSIONS.join(", ")}
+                </p>
+              </div>
+            )}
             {showPreview && code ? (
               <div className="h-full overflow-auto rounded-lg border border-border">
                 <SyntaxHighlighter
