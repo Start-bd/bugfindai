@@ -205,7 +205,11 @@ const CodeInput = forwardRef<CodeInputRef, CodeInputProps>(({ onSubmit, isLoadin
   const processDroppedFile = async (file: File) => {
     const extension = "." + file.name.split(".").pop()?.toLowerCase();
     if (!SUPPORTED_EXTENSIONS.includes(extension)) {
-      logger.error("Unsupported file type dropped:", file.name);
+      toast({
+        title: "Unsupported file type",
+        description: `Please use a supported file: ${SUPPORTED_EXTENSIONS.join(", ")}`,
+        variant: "destructive",
+      });
       return;
     }
     const content = await file.text();
