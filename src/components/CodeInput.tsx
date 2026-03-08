@@ -329,11 +329,11 @@ function example() {
                       <div className="flex items-center gap-1.5 cursor-default">
                         <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
                           <div 
-                            className={`h-full transition-all duration-300 rounded-full ${
+                            className={`h-full rounded-full transition-all duration-500 ease-in-out ${
                               code.length > MAX_CODE_SIZE 
-                                ? 'bg-destructive' 
+                                ? 'bg-destructive shadow-[0_0_6px_hsl(var(--destructive)/0.5)]' 
                                 : code.length > MAX_CODE_SIZE * WARNING_THRESHOLD 
-                                  ? 'bg-yellow-500' 
+                                  ? 'bg-warning shadow-[0_0_6px_hsl(var(--warning)/0.4)]' 
                                   : 'bg-primary'
                             }`}
                             style={{ width: `${Math.min((code.length / MAX_CODE_SIZE) * 100, 100)}%` }}
