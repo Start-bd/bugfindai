@@ -36,6 +36,8 @@ const CodeInput = forwardRef<CodeInputRef, CodeInputProps>(({ onSubmit, isLoadin
   const [githubUrl, setGithubUrl] = useState("");
   const [githubError, setGithubError] = useState("");
   const [isFetchingGithub, setIsFetchingGithub] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const dragCounterRef = useRef(0);
 
   // Expose methods to parent
   useImperativeHandle(ref, () => ({
@@ -198,6 +200,53 @@ const CodeInput = forwardRef<CodeInputRef, CodeInputProps>(({ onSubmit, isLoadin
     setCode(e.target.value);
   };
 
+  const processDroppedFile = async (file: File) => {
+    const extension = "." + file.name.split(".").pop()?.toLowerCase();
+    if (!SUPPORTED_EXTENSIONS.includes(extension)) {
+      logger.error("Unsupported file type dropped:", file.name);
+      return;
+    }
+    const content = await file.text();
+    setUploadedFile({ name: file.name, content });
+    setCode(content);
+    setShowPreview(true);
+    setActiveTab("paste");
+  };
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current++;
+    if (e.dataTransfer.types.includes("Files")) {
+      setIsDragOver(true);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current--;
+    if (dragCounterRef.current === 0) {
+      setIsDragOver(false);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current = 0;
+    setIsDragOver(false);
+
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      await processDroppedFile(file);
+    }
+  };
   return (
     <div className="h-full flex flex-col">
       <div className="flex items-center justify-between mb-4">
@@ -263,7 +312,23 @@ const CodeInput = forwardRef<CodeInputRef, CodeInputProps>(({ onSubmit, isLoadin
             </div>
           )}
 
-          <div className="flex-1 relative min-h-[350px]">
+          <div
+            className="flex-1 relative min-h-[350px]"
+            onDragEnter={handleDragEnter}
+            onDragLeave={handleDragLeave}
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+          >
+            {/* Drag overlay */}
+            {isDragOver && (
+              <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-primary bg-primary/10 backdrop-blur-sm transition-all">
+                <Upload className="w-10 h-10 text-primary mb-2 animate-bounce" />
+                <p className="text-sm font-medium text-primary">Drop file to scan</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {SUPPORTED_EXTENSIONS.join(", ")}
+                </p>
+              </div>
+            )}
             {showPreview && code ? (
               <div className="h-full overflow-auto rounded-lg border border-border">
                 <SyntaxHighlighter
