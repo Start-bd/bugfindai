@@ -331,7 +331,7 @@ function example() {
                           <div 
                             className={`h-full rounded-full transition-all duration-500 ease-in-out ${
                               code.length > MAX_CODE_SIZE 
-                                ? 'bg-destructive shadow-[0_0_6px_hsl(var(--destructive)/0.5)]' 
+                                ? 'bg-destructive shadow-[0_0_6px_hsl(var(--destructive)/0.5)] animate-pulse' 
                                 : code.length > MAX_CODE_SIZE * WARNING_THRESHOLD 
                                   ? 'bg-warning shadow-[0_0_6px_hsl(var(--warning)/0.4)]' 
                                   : 'bg-primary'
