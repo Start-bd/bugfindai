@@ -138,7 +138,23 @@ const CodeInput = forwardRef<CodeInputRef, CodeInputProps>(({ onSubmit, isLoadin
     setIsFetchingGithub(true);
     
     try {
-      const result = convertGithubUrlToRaw(githubUrl);
+      // Validate hostname before any processing
+      let parsed: URL;
+      try {
+        parsed = new URL(githubUrl.trim());
+      } catch {
+        setGithubError("Invalid URL. Please enter a valid GitHub URL.");
+        setIsFetchingGithub(false);
+        return;
+      }
+
+      if (!['github.com', 'raw.githubusercontent.com'].includes(parsed.hostname)) {
+        setGithubError("URL must point to github.com or raw.githubusercontent.com");
+        setIsFetchingGithub(false);
+        return;
+      }
+
+      const result = convertGithubUrlToRaw(githubUrl.trim());
       
       if (!result) {
         setGithubError("Invalid GitHub URL. Please use a link to a file (e.g., github.com/user/repo/blob/main/file.js)");
@@ -172,7 +188,7 @@ const CodeInput = forwardRef<CodeInputRef, CodeInputProps>(({ onSubmit, isLoadin
       setUploadedFile({ name: filename, content });
       setCode(content);
       setShowPreview(true);
-      setActiveTab("paste"); // Switch to paste tab to show the code
+      setActiveTab("paste");
       
     } catch (error) {
       logger.error("GitHub fetch error:", error);
