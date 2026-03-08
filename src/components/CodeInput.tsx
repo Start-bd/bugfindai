@@ -5,6 +5,7 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import KeyboardShortcuts from "./KeyboardShortcuts";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useSyntaxStyle } from "@/hooks/useSyntaxStyle";
 import { logger } from "@/lib/logger";
 
@@ -322,29 +323,38 @@ function example() {
                 {code.length > MAX_CODE_SIZE && (
                   <AlertCircle className="w-3 h-3 text-destructive" />
                 )}
-                <div className="flex items-center gap-1.5">
-                  <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full transition-all duration-300 rounded-full ${
-                        code.length > MAX_CODE_SIZE 
-                          ? 'bg-destructive' 
-                          : code.length > MAX_CODE_SIZE * WARNING_THRESHOLD 
-                            ? 'bg-yellow-500' 
-                            : 'bg-primary'
-                      }`}
-                      style={{ width: `${Math.min((code.length / MAX_CODE_SIZE) * 100, 100)}%` }}
-                    />
-                  </div>
-                  <span className={`${
-                    code.length > MAX_CODE_SIZE 
-                      ? 'text-destructive' 
-                      : code.length > MAX_CODE_SIZE * WARNING_THRESHOLD 
-                        ? 'text-yellow-600 dark:text-yellow-400' 
-                        : ''
-                  }`}>
-                    {Math.round(code.length / 1000)}KB
-                  </span>
-                </div>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center gap-1.5 cursor-default">
+                        <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
+                          <div 
+                            className={`h-full transition-all duration-300 rounded-full ${
+                              code.length > MAX_CODE_SIZE 
+                                ? 'bg-destructive' 
+                                : code.length > MAX_CODE_SIZE * WARNING_THRESHOLD 
+                                  ? 'bg-yellow-500' 
+                                  : 'bg-primary'
+                            }`}
+                            style={{ width: `${Math.min((code.length / MAX_CODE_SIZE) * 100, 100)}%` }}
+                          />
+                        </div>
+                        <span className={`${
+                          code.length > MAX_CODE_SIZE 
+                            ? 'text-destructive' 
+                            : code.length > MAX_CODE_SIZE * WARNING_THRESHOLD 
+                              ? 'text-yellow-600 dark:text-yellow-400' 
+                              : ''
+                        }`}>
+                          {Math.round(code.length / 1000)}KB
+                        </span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                      <p>{code.length.toLocaleString()} / {MAX_CODE_SIZE.toLocaleString()} bytes ({Math.round((code.length / MAX_CODE_SIZE) * 100)}% used)</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
             </div>
           </div>
