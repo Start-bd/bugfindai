@@ -36,6 +36,8 @@ const CodeInput = forwardRef<CodeInputRef, CodeInputProps>(({ onSubmit, isLoadin
   const [githubUrl, setGithubUrl] = useState("");
   const [githubError, setGithubError] = useState("");
   const [isFetchingGithub, setIsFetchingGithub] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const dragCounterRef = useRef(0);
 
   // Expose methods to parent
   useImperativeHandle(ref, () => ({
