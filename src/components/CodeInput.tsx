@@ -8,6 +8,7 @@ import KeyboardShortcuts from "./KeyboardShortcuts";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useSyntaxStyle } from "@/hooks/useSyntaxStyle";
 import { logger } from "@/lib/logger";
+import { toast } from "@/hooks/use-toast";
 
 interface CodeInputProps {
   onSubmit: (code: string, filename?: string) => void;
