@@ -4,7 +4,6 @@
 # Allow all major search engine crawlers
 User-agent: Googlebot
 Allow: /
-Crawl-delay: 1
 
 User-agent: Bingbot
 Allow: /
@@ -41,16 +40,6 @@ Allow: /
 User-agent: Slackbot
 Allow: /
 
-# Allow AI training bots that respect robots.txt
-User-agent: GPTBot
-Allow: /
-
-User-agent: ChatGPT-User
-Allow: /
-
-User-agent: Google-Extended
-Allow: /
-
 # Disallow private/sensitive paths from all bots
 User-agent: *
 Allow: /
@@ -58,7 +47,6 @@ Disallow: /api/
 Disallow: /_supabase/
 Disallow: /admin/
 Disallow: /dashboard/internal/
-Crawl-delay: 2
 
 # Sitemap location
 Sitemap: https://bugfindai.com/sitemap.xml
