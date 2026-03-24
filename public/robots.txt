@@ -1,28 +1,24 @@
 # robots.txt for BugFindAI (https://bugfindai.com)
 # AI-powered code bug scanner & security vulnerability detector
 
-# Allow all major search engine crawlers
+# Allow all search engine crawlers
 User-agent: Googlebot
 Allow: /
 
 User-agent: Bingbot
 Allow: /
-Crawl-delay: 2
 
 User-agent: Slurp
 Allow: /
-Crawl-delay: 2
 
 User-agent: DuckDuckBot
 Allow: /
 
 User-agent: Baiduspider
 Allow: /
-Crawl-delay: 3
 
 User-agent: YandexBot
 Allow: /
-Crawl-delay: 3
 
 # Allow social media crawlers (important for OG previews)
 User-agent: Twitterbot
