@@ -50,7 +50,8 @@ serve(async (req) => {
     }
 
     const userId = userData.user.id;
-    console.log(`Authenticated user: ${userId}`);
+    const userRef = userId.slice(0, 8);
+    console.log(`Authenticated user: ${userRef}`);
 
     const MAX_CODE_SIZE = 100000; // 100KB reasonable limit
     
