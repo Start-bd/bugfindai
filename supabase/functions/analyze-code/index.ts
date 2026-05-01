@@ -50,7 +50,8 @@ serve(async (req) => {
     }
 
     const userId = userData.user.id;
-    console.log(`Authenticated user: ${userId}`);
+    const userRef = userId.slice(0, 8);
+    console.log(`Authenticated user: ${userRef}`);
 
     const MAX_CODE_SIZE = 100000; // 100KB reasonable limit
     
@@ -77,7 +78,7 @@ serve(async (req) => {
       throw new Error("AI service not configured");
     }
 
-    console.log(`Analyzing code for user ${userId} (${language || 'unknown language'}), length: ${code.length} chars, streaming: ${stream}`);
+    console.log(`Analyzing code for user ${userRef} (${language || 'unknown language'}), length: ${code.length} chars, streaming: ${stream}`);
 
     const systemPrompt = `You are an expert code analyzer for BugFindAI. Analyze the provided code and detect:
 1. Bugs and errors
@@ -177,7 +178,7 @@ Be thorough but practical. Focus on real issues, not style preferences.`;
       };
     }
 
-    console.log(`Analysis complete for user ${userId}: ${result.issues?.length || 0} issues found`);
+    console.log(`Analysis complete for user ${userRef}: ${result.issues?.length || 0} issues found`);
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
