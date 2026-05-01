@@ -78,7 +78,7 @@ serve(async (req) => {
       throw new Error("AI service not configured");
     }
 
-    console.log(`Analyzing code for user ${userId} (${language || 'unknown language'}), length: ${code.length} chars, streaming: ${stream}`);
+    console.log(`Analyzing code for user ${userRef} (${language || 'unknown language'}), length: ${code.length} chars, streaming: ${stream}`);
 
     const systemPrompt = `You are an expert code analyzer for BugFindAI. Analyze the provided code and detect:
 1. Bugs and errors
