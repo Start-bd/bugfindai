@@ -75,6 +75,16 @@ const Scan = () => {
   };
 
   const handleSubmit = async (code: string, filename?: string) => {
+    if (!user) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to use the AI code analyzer.",
+        variant: "destructive",
+      });
+      navigate('/auth');
+      return;
+    }
+
     setIsLoading(true);
     setIssues([]);
     setSummary("");
@@ -189,7 +199,7 @@ const Scan = () => {
                 >
                   Sign in
                 </button>
-                {" "}to save your scan history.
+                {" "}to use the AI code analyzer and save your scan history.
               </p>
             )}
           </div>

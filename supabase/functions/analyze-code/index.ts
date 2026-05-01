@@ -28,19 +28,28 @@ serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    // Validate JWT token
+    // Validate JWT token — require a real authenticated user (reject anon key)
     const token = authHeader.replace('Bearer ', '');
-    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
-    
-    if (claimsError || !claimsData?.claims) {
-      console.error("JWT validation failed:", claimsError?.message);
+    const { data: userData, error: userError } = await supabase.auth.getUser(token);
+
+    if (userError || !userData?.user) {
+      console.error("JWT validation failed:", userError?.message);
       return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
+        JSON.stringify({ error: 'Authentication required. Please sign in to use the code analyzer.' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const userId = claimsData.claims.sub;
+    // Reject anonymous role tokens (e.g. raw anon key) — require a real user session
+    const userRole = (userData.user as unknown as { role?: string }).role;
+    if (!userData.user.id || userRole === 'anon') {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required. Please sign in to use the code analyzer.' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const userId = userData.user.id;
     console.log(`Authenticated user: ${userId}`);
 
     const MAX_CODE_SIZE = 100000; // 100KB reasonable limit

@@ -10,6 +10,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Issue } from "./IssueCard";
 import { useToast } from "@/hooks/use-toast";
 import { trackEvent } from "@/lib/analytics";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 const SUPPORTED_EXTENSIONS = [".js", ".ts", ".jsx", ".tsx", ".py", ".java", ".php", ".go", ".cpp", ".c", ".rb", ".rs"];
 
@@ -29,6 +31,8 @@ interface BatchFileUploadProps {
 
 const BatchFileUpload = ({ onComplete, isLoading, setIsLoading }: BatchFileUploadProps) => {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [files, setFiles] = useState<FileResult[]>([]);
   const [expandedFiles, setExpandedFiles] = useState<Set<string>>(new Set());
@@ -153,6 +157,15 @@ const BatchFileUpload = ({ onComplete, isLoading, setIsLoading }: BatchFileUploa
 
   const scanAllFiles = async () => {
     if (files.length === 0) return;
+    if (!user) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to use the AI code analyzer.",
+        variant: "destructive",
+      });
+      navigate('/auth');
+      return;
+    }
 
     setIsLoading(true);
     setProgress(0);
