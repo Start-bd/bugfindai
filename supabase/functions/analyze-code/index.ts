@@ -178,7 +178,7 @@ Be thorough but practical. Focus on real issues, not style preferences.`;
       };
     }
 
-    console.log(`Analysis complete for user ${userId}: ${result.issues?.length || 0} issues found`);
+    console.log(`Analysis complete for user ${userRef}: ${result.issues?.length || 0} issues found`);
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
