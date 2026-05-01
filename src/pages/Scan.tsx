@@ -199,7 +199,7 @@ const Scan = () => {
                 >
                   Sign in
                 </button>
-                {" "}to save your scan history.
+                {" "}to use the AI code analyzer and save your scan history.
               </p>
             )}
           </div>
