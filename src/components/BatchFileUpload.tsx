@@ -31,6 +31,8 @@ interface BatchFileUploadProps {
 
 const BatchFileUpload = ({ onComplete, isLoading, setIsLoading }: BatchFileUploadProps) => {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [files, setFiles] = useState<FileResult[]>([]);
   const [expandedFiles, setExpandedFiles] = useState<Set<string>>(new Set());
