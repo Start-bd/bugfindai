@@ -157,6 +157,15 @@ const BatchFileUpload = ({ onComplete, isLoading, setIsLoading }: BatchFileUploa
 
   const scanAllFiles = async () => {
     if (files.length === 0) return;
+    if (!user) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to use the AI code analyzer.",
+        variant: "destructive",
+      });
+      navigate('/auth');
+      return;
+    }
 
     setIsLoading(true);
     setProgress(0);
