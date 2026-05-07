@@ -1,48 +1,8 @@
 # robots.txt for BugFindAI (https://bugfindai.com)
-# AI-powered code bug scanner & security vulnerability detector
 
-# Allow all search engine crawlers
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Slurp
-Allow: /
-
-User-agent: DuckDuckBot
-Allow: /
-
-User-agent: Baiduspider
-Allow: /
-
-User-agent: YandexBot
-Allow: /
-
-# Allow social media crawlers (important for OG previews)
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
-User-agent: LinkedInBot
-Allow: /
-
-User-agent: WhatsApp
-Allow: /
-
-User-agent: Slackbot
-Allow: /
-
-# Disallow private/sensitive paths from all bots
 User-agent: *
 Allow: /
 Disallow: /api/
 Disallow: /_supabase/
-Disallow: /admin/
-Disallow: /dashboard/internal/
 
-# Sitemap location
 Sitemap: https://bugfindai.com/sitemap.xml
