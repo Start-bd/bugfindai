@@ -181,7 +181,11 @@
     </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- SSR fallback for crawlers that don't execute JS -->
+      <h1 style="position:absolute;left:-9999px">BugFindAI - Free AI Code Bug Scanner & Security Vulnerability Detector</h1>
+      <p style="position:absolute;left:-9999px">Scan JavaScript, Python, TypeScript, Java, C++, PHP and more for bugs and security vulnerabilities instantly with AI-powered fix suggestions.</p>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
